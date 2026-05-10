@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "rube": {
+      "url": "https://rube.app/mcp"
+    },
+    "hykohub-knowledge-base": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/Users/luisclaudiosantos/dev/Hyko/mcp/index.js"]
+    }
+  }
+}
