@@ -128,11 +128,11 @@ export default function PerfilPage() {
   async function onSubmit(data: FormData) {
     if (!userId) return
     setSaving(true)
-    const update: any = {
+    const update: Database['public']['Tables']['profiles']['Update'] = {
       nome: data.nome,
       pais: data.pais || null,
-      cidade: data.cidade || null,
-      estado: data.estado || null,
+      cidade: data.cidade || undefined,
+      estado: data.estado || undefined,
       bio: data.bio || null,
       nivel_experiencia: data.nivel_experiencia || null,
       whatsapp: data.whatsapp || null,
@@ -191,7 +191,7 @@ export default function PerfilPage() {
       setPrinters(remaining)
       toast.success('Impressora removida')
       if (remaining.length === 0) {
-        await supabase.from('profiles').update({ tem_impressora: false } as never).eq('id', userId)
+        await supabase.from('profiles').update({ tem_impressora: false }).eq('id', userId!)
       }
     }
   }

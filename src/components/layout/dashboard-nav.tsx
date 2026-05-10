@@ -46,7 +46,7 @@ const NAV_ITEMS = [
 
 interface DashboardNavProps {
   user: User
-  profile: Pick<Profile, 'nome' | 'avatar_url' | 'tier' | 'trust_score' | 'is_pro'> & { is_admin?: boolean } | null
+  profile: Pick<Profile, 'nome' | 'avatar_url' | 'tier' | 'trust_score' | 'is_pro'> & { is_admin?: boolean | null } | null
 }
 
 export function DashboardNav({ user, profile }: DashboardNavProps) {
@@ -115,8 +115,8 @@ export function DashboardNav({ user, profile }: DashboardNavProps) {
               <DropdownMenuLabel className="font-normal">
                 <p className="font-medium text-foreground truncate">{nome}</p>
                 <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                <Badge className={`mt-1.5 text-xs px-2 py-0.5 ${TIER_COLORS[tier]}`} variant="secondary">
-                  {TIER_LABELS[tier]}
+                <Badge className={`mt-1.5 text-xs px-2 py-0.5 ${TIER_COLORS[tier as MemberTier]}`} variant="secondary">
+                  {TIER_LABELS[tier as MemberTier]}
                 </Badge>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
