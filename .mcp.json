@@ -1,8 +1,5 @@
 {
   "mcpServers": {
-    "rube": {
-      "url": "https://rube.app/mcp"
-    },
     "hykohub-knowledge-base": {
       "type": "stdio",
       "command": "node",
