@@ -7,6 +7,15 @@ import Link from 'next/link'
 
 type GroupPurchase = Database['public']['Tables']['group_purchases']['Row']
 
+const PAIS_LABEL: Record<string, string> = {
+  BR: '🇧🇷 Brasil', PT: '🇵🇹 Portugal', US: '🇺🇸 Estados Unidos',
+  CA: '🇨🇦 Canadá', GB: '🇬🇧 Reino Unido', DE: '🇩🇪 Alemanha',
+  FR: '🇫🇷 França', ES: '🇪🇸 Espanha', IT: '🇮🇹 Itália',
+  NL: '🇳🇱 Holanda', CH: '🇨🇭 Suíça', AU: '🇦🇺 Austrália',
+  NZ: '🇳🇿 Nova Zelândia', JP: '🇯🇵 Japão', AR: '🇦🇷 Argentina',
+  CL: '🇨🇱 Chile', MX: '🇲🇽 México', OTHER: '🌍 Outro',
+}
+
 export default async function ComprasPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -45,7 +54,7 @@ export default async function ComprasPage() {
         {userPais && (
           <Badge variant="secondary" className="flex items-center gap-1 shrink-0 mt-1">
             <MapPin className="w-3 h-3" />
-            {userPais}
+            {PAIS_LABEL[userPais] ?? userPais}
           </Badge>
         )}
       </div>

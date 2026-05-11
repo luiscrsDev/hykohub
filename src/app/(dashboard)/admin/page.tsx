@@ -11,6 +11,28 @@ import {
   Loader2, Check, X, Box, Play, Plus,
   ExternalLink, Clock, CheckCircle2, XCircle, Users, ShoppingCart, Trash2,
 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+const PAISES = [
+  { value: 'BR', label: '🇧🇷 Brasil' },
+  { value: 'PT', label: '🇵🇹 Portugal' },
+  { value: 'US', label: '🇺🇸 Estados Unidos' },
+  { value: 'CA', label: '🇨🇦 Canadá' },
+  { value: 'GB', label: '🇬🇧 Reino Unido' },
+  { value: 'DE', label: '🇩🇪 Alemanha' },
+  { value: 'FR', label: '🇫🇷 França' },
+  { value: 'ES', label: '🇪🇸 Espanha' },
+  { value: 'IT', label: '🇮🇹 Itália' },
+  { value: 'NL', label: '🇳🇱 Holanda' },
+  { value: 'CH', label: '🇨🇭 Suíça' },
+  { value: 'AU', label: '🇦🇺 Austrália' },
+  { value: 'NZ', label: '🇳🇿 Nova Zelândia' },
+  { value: 'JP', label: '🇯🇵 Japão' },
+  { value: 'AR', label: '🇦🇷 Argentina' },
+  { value: 'CL', label: '🇨🇱 Chile' },
+  { value: 'MX', label: '🇲🇽 México' },
+  { value: 'OTHER', label: '🌍 Outro' },
+]
 import { MembersCrm } from '@/components/admin/members-crm'
 
 type AdminTab = 'conteudo' | 'membros' | 'compras'
@@ -327,7 +349,16 @@ export default function AdminPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">País <span className="text-destructive">*</span></Label>
-                  <Input className="h-8 text-sm uppercase" placeholder="BR, US, PT..." value={cPais} onChange={e => setCPais(e.target.value)} maxLength={4} />
+                  <Select value={cPais} onValueChange={v => setCPais(v ?? '')}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAISES.map(p => (
+                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Preço cheio (R$) <span className="text-destructive">*</span></Label>
