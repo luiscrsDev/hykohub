@@ -9,11 +9,11 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import {
   Loader2, Check, X, Box, Play, Plus,
-  ExternalLink, Clock, CheckCircle2, XCircle, Users,
+  ExternalLink, Clock, CheckCircle2, XCircle, Users, ShoppingCart, Trash2,
 } from 'lucide-react'
 import { MembersCrm } from '@/components/admin/members-crm'
 
-type AdminTab = 'conteudo' | 'membros'
+type AdminTab = 'conteudo' | 'membros' | 'compras'
 
 type StlPost = {
   id: string; title: string; description: string | null
@@ -76,6 +76,21 @@ export default function AdminPage() {
   const [sFeatured, setSFeatured] = useState(false)
   const [sSaving, setSSaving] = useState(false)
 
+  // Compras
+  const [compras, setCompras] = useState<any[]>([])
+  const [comprasLoading, setComprasLoading] = useState(false)
+  const [showAddCompra, setShowAddCompra] = useState(false)
+  const [cProduto, setCProduto] = useState('')
+  const [cFornecedor, setCFornecedor] = useState('')
+  const [cPais, setCPais] = useState('')
+  const [cPrecoCheio, setCPrecoCheio] = useState('')
+  const [cPrecoGrupo, setCPrecoGrupo] = useState('')
+  const [cPrecoPro, setCPrecoPro] = useState('')
+  const [cMinimo, setCMinimo] = useState('')
+  const [cPrazo, setCPrazo] = useState('')
+  const [cImagem, setCImagem] = useState('')
+  const [cSaving, setCSaving] = useState(false)
+
   // Video
   const [videoFilter, setVideoFilter] = useState<StatusFilter>('pending')
   const [videoPosts, setVideoPosts] = useState<VideoPost[]>([])
@@ -103,6 +118,7 @@ export default function AdminPage() {
 
   useEffect(() => { if (isAdmin) loadStl() }, [isAdmin, stlFilter])
   useEffect(() => { if (isAdmin) loadVideos() }, [isAdmin, videoFilter])
+  useEffect(() => { if (isAdmin && tab === 'compras') loadCompras() }, [isAdmin, tab])
 
   async function loadStl() {
     setStlLoading(true)
@@ -118,6 +134,54 @@ export default function AdminPage() {
       .eq('status', videoFilter).order('created_at', { ascending: false })
     setVideoPosts((data as VideoPost[]) ?? [])
     setVideoLoading(false)
+  }
+
+  async function loadCompras() {
+    setComprasLoading(true)
+    const { data } = await supabase.from('group_purchases').select('*').order('created_at', { ascending: false })
+    setCompras(data ?? [])
+    setComprasLoading(false)
+  }
+
+  async function handleAddCompra() {
+    if (!cProduto.trim() || !cFornecedor.trim() || !cPais.trim() ||
+        !cPrecoCheio || !cPrecoGrupo || !cMinimo || !cPrazo) {
+      toast.error('Preencha todos os campos obrigatórios')
+      return
+    }
+    setCSaving(true)
+    const { error } = await supabase.from('group_purchases').insert({
+      produto: cProduto.trim(),
+      fornecedor: cFornecedor.trim(),
+      pais: cPais.trim().toUpperCase(),
+      preco_cheio: parseFloat(cPrecoCheio),
+      preco_grupo: parseFloat(cPrecoGrupo),
+      preco_pro: cPrecoPro ? parseFloat(cPrecoPro) : null,
+      minimo_adesoes: parseInt(cMinimo),
+      prazo_dias: parseInt(cPrazo),
+      imagem_url: cImagem.trim() || null,
+      ativo: true,
+    })
+    setCSaving(false)
+    if (error) { toast.error('Erro ao cadastrar'); return }
+    toast.success('Compra coletiva publicada!')
+    setCProduto(''); setCFornecedor(''); setCPais(''); setCPrecoCheio('')
+    setCPrecoGrupo(''); setCPrecoPro(''); setCMinimo(''); setCPrazo(''); setCImagem('')
+    setShowAddCompra(false)
+    loadCompras()
+  }
+
+  async function toggleCompraAtivo(id: string, ativo: boolean) {
+    await supabase.from('group_purchases').update({ ativo }).eq('id', id)
+    setCompras(prev => prev.map(c => c.id === id ? { ...c, ativo } : c))
+  }
+
+  async function deleteCompra(id: string) {
+    if (!confirm('Excluir esta compra coletiva?')) return
+    const { error } = await supabase.from('group_purchases').delete().eq('id', id)
+    if (error) { toast.error('Erro ao excluir'); return }
+    toast.success('Compra excluída')
+    setCompras(prev => prev.filter(c => c.id !== id))
   }
 
   // STL actions
@@ -220,6 +284,7 @@ export default function AdminPage() {
       <div className="flex gap-1 p-1 bg-muted/40 rounded-xl w-fit border border-border/40">
         {([
           { key: 'conteudo', label: 'Conteúdo', icon: Box },
+          { key: 'compras', label: 'Compras', icon: ShoppingCart },
           { key: 'membros', label: 'Membros', icon: Users },
         ] as { key: AdminTab; label: string; icon: any }[]).map(({ key, label, icon: Icon }) => (
           <button
@@ -235,6 +300,102 @@ export default function AdminPage() {
       </div>
 
       {tab === 'membros' && <MembersCrm />}
+
+      {tab === 'compras' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-foreground flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4 text-primary" /> Compras coletivas
+            </h2>
+            <Button size="sm" onClick={() => setShowAddCompra(v => !v)}
+              variant={showAddCompra ? 'outline' : 'default'} className="gap-1.5 h-8 text-xs">
+              {showAddCompra ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+              {showAddCompra ? 'Cancelar' : 'Nova compra'}
+            </Button>
+          </div>
+
+          {showAddCompra && (
+            <div className="bg-card border border-border/60 rounded-2xl p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2 space-y-1.5">
+                  <Label className="text-xs">Produto <span className="text-destructive">*</span></Label>
+                  <Input className="h-8 text-sm" placeholder="Ex: Filamento PLA Premium 1kg" value={cProduto} onChange={e => setCProduto(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Fornecedor <span className="text-destructive">*</span></Label>
+                  <Input className="h-8 text-sm" placeholder="Ex: Polymaker" value={cFornecedor} onChange={e => setCFornecedor(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">País <span className="text-destructive">*</span></Label>
+                  <Input className="h-8 text-sm uppercase" placeholder="BR, US, PT..." value={cPais} onChange={e => setCPais(e.target.value)} maxLength={4} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Preço cheio (R$) <span className="text-destructive">*</span></Label>
+                  <Input className="h-8 text-sm" type="number" step="0.01" placeholder="0.00" value={cPrecoCheio} onChange={e => setCPrecoCheio(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Preço grupo (R$) <span className="text-destructive">*</span></Label>
+                  <Input className="h-8 text-sm" type="number" step="0.01" placeholder="0.00" value={cPrecoGrupo} onChange={e => setCPrecoGrupo(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Preço Pro (R$) <span className="text-muted-foreground">(opcional)</span></Label>
+                  <Input className="h-8 text-sm" type="number" step="0.01" placeholder="0.00" value={cPrecoPro} onChange={e => setCPrecoPro(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Mínimo de adesões <span className="text-destructive">*</span></Label>
+                  <Input className="h-8 text-sm" type="number" placeholder="50" value={cMinimo} onChange={e => setCMinimo(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Prazo (dias) <span className="text-destructive">*</span></Label>
+                  <Input className="h-8 text-sm" type="number" placeholder="30" value={cPrazo} onChange={e => setCPrazo(e.target.value)} />
+                </div>
+                <div className="col-span-2 space-y-1.5">
+                  <Label className="text-xs">Imagem URL <span className="text-muted-foreground">(opcional)</span></Label>
+                  <Input className="h-8 text-sm" placeholder="https://..." value={cImagem} onChange={e => setCImagem(e.target.value)} />
+                </div>
+              </div>
+              <Button size="sm" onClick={handleAddCompra} disabled={cSaving} className="w-full gap-2 h-8">
+                {cSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Publicar compra
+              </Button>
+            </div>
+          )}
+
+          {comprasLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+          ) : compras.length === 0 ? (
+            <div className="bg-card border border-border/60 rounded-xl p-8 text-center">
+              <p className="text-sm text-muted-foreground">Nenhuma compra coletiva cadastrada.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {compras.map(c => (
+                <div key={c.id} className="bg-card border border-border/60 rounded-xl p-4 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-medium text-foreground truncate">{c.produto}</p>
+                      <Badge variant="outline" className="text-xs shrink-0">{c.pais}</Badge>
+                      <Badge className={`text-xs shrink-0 ${c.ativo ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-muted text-muted-foreground'}`}>
+                        {c.ativo ? 'Aberta' : 'Encerrada'}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{c.fornecedor} · R$ {c.preco_grupo?.toFixed(2)} (grupo) · {c.atual_adesoes}/{c.minimo_adesoes} adesões</p>
+                  </div>
+                  <div className="flex gap-1.5 shrink-0">
+                    <button onClick={() => toggleCompraAtivo(c.id, !c.ativo)}
+                      className="px-2 py-1 rounded-lg text-xs font-medium bg-muted/60 text-muted-foreground hover:text-foreground border border-border/40 transition-colors">
+                      {c.ativo ? 'Encerrar' : 'Reabrir'}
+                    </button>
+                    <button onClick={() => deleteCompra(c.id)}
+                      className="p-1.5 rounded-lg text-destructive hover:bg-destructive/10 border border-destructive/20 transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {tab === 'conteudo' && <div className="grid lg:grid-cols-2 gap-6 items-start">
 

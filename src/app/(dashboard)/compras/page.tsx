@@ -2,30 +2,65 @@ import { createClient } from '@/lib/supabase/server'
 import type { Database } from '@/types/database'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ShoppingCart, Users, TrendingDown, Clock } from 'lucide-react'
+import { ShoppingCart, Users, TrendingDown, Clock, MapPin } from 'lucide-react'
+import Link from 'next/link'
 
 type GroupPurchase = Database['public']['Tables']['group_purchases']['Row']
 
 export default async function ComprasPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: rawPurchases } = await supabase
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('pais')
+    .eq('id', user!.id)
+    .single()
+
+  const userPais = profile?.pais ?? null
+
+  let query = supabase
     .from('group_purchases')
     .select('*')
     .order('created_at', { ascending: false })
 
+  if (userPais) {
+    query = query.eq('pais', userPais)
+  }
+
+  const { data: rawPurchases } = await query
   const purchases = rawPurchases as GroupPurchase[] | null
   const abertas = purchases?.filter(p => p.ativo) ?? []
   const fechadas = purchases?.filter(p => !p.ativo) ?? []
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Compras do grupo</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          O consumo somado dos membros garante melhores preços. Quem está na plataforma vê o preço reduzido.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Compras do grupo</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            O consumo somado dos membros garante melhores preços. Quem está na plataforma vê o preço reduzido.
+          </p>
+        </div>
+        {userPais && (
+          <Badge variant="secondary" className="flex items-center gap-1 shrink-0 mt-1">
+            <MapPin className="w-3 h-3" />
+            {userPais}
+          </Badge>
+        )}
       </div>
+
+      {/* Aviso sem país */}
+      {!userPais && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-center gap-3">
+          <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+          <p className="text-sm text-amber-300">
+            Defina seu país no{' '}
+            <Link href="/perfil" className="underline underline-offset-2 font-medium">perfil</Link>
+            {' '}para ver as compras disponíveis na sua região.
+          </p>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid sm:grid-cols-3 gap-4">
@@ -53,7 +88,11 @@ export default async function ComprasPage() {
           <div className="bg-card border border-border/60 rounded-2xl p-10 text-center">
             <ShoppingCart className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
             <h3 className="font-medium text-foreground mb-1">Nenhuma compra aberta</h3>
-            <p className="text-sm text-muted-foreground">Novas compras aparecem aqui quando a equipe abre rodadas.</p>
+            <p className="text-sm text-muted-foreground">
+              {userPais
+                ? `Novas compras para ${userPais} aparecem aqui quando a equipe abre rodadas.`
+                : 'Defina seu país no perfil para ver compras da sua região.'}
+            </p>
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -100,8 +139,8 @@ function PurchaseCard({ gp, closed }: { gp: GroupPurchase; closed?: boolean }) {
 
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-2xl font-bold text-foreground">${gp.preco_grupo?.toFixed(2)}</p>
-          <p className="text-xs text-muted-foreground line-through">${gp.preco_cheio?.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-foreground">R$ {gp.preco_grupo?.toFixed(2)}</p>
+          <p className="text-xs text-muted-foreground line-through">R$ {gp.preco_cheio?.toFixed(2)}</p>
         </div>
         <Badge className="bg-green-500/10 text-green-600 border-green-500/20 text-sm font-bold">
           -{discount}%

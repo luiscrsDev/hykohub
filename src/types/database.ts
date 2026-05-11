@@ -66,6 +66,7 @@ export type Database = {
           id: string
           imagem_url: string | null
           minimo_adesoes: number
+          pais: string
           prazo_dias: number
           preco_cheio: number
           preco_grupo: number
@@ -80,6 +81,7 @@ export type Database = {
           id?: string
           imagem_url?: string | null
           minimo_adesoes?: number
+          pais: string
           prazo_dias: number
           preco_cheio: number
           preco_grupo: number
@@ -94,6 +96,7 @@ export type Database = {
           id?: string
           imagem_url?: string | null
           minimo_adesoes?: number
+          pais?: string
           prazo_dias?: number
           preco_cheio?: number
           preco_grupo?: number
