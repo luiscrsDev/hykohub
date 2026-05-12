@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { LayoutDashboard, ShoppingCart, Briefcase, Settings, LogOut, User as UserIcon, Menu, X, Box, Play, ShieldCheck } from 'lucide-react'
+import { LayoutDashboard, ShoppingCart, Briefcase, Settings, LogOut, User as UserIcon, Menu, X, Box, Play, ShieldCheck, Tag, Users } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -40,7 +40,8 @@ const NAV_ITEMS = [
   { href: '/dashboard', label: 'Feed', icon: LayoutDashboard },
   { href: '/modelos', label: 'Modelos', icon: Box },
   { href: '/videos', label: 'Vídeos', icon: Play },
-  { href: '/compras', label: 'Compras', icon: ShoppingCart },
+  { href: '/ofertas', label: 'Ofertas', icon: Tag },
+  { href: '/compras', label: 'Coletivas', icon: ShoppingCart },
   { href: '/vire-pro', label: 'Vire Pro', icon: Briefcase },
 ]
 

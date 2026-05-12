@@ -4,7 +4,16 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowRight, Bell, ShoppingCart, Printer, Star, ChevronRight, Package, Box, Play } from 'lucide-react'
+import { ArrowRight, Bell, ShoppingCart, Printer, Star, ChevronRight, Package, Box, Play, MapPin } from 'lucide-react'
+
+const PAIS_LABEL: Record<string, string> = {
+  BR: '🇧🇷 Brasil', PT: '🇵🇹 Portugal', US: '🇺🇸 EUA',
+  CA: '🇨🇦 Canadá', GB: '🇬🇧 Reino Unido', DE: '🇩🇪 Alemanha',
+  FR: '🇫🇷 França', ES: '🇪🇸 Espanha', IT: '🇮🇹 Itália',
+  NL: '🇳🇱 Holanda', CH: '🇨🇭 Suíça', AU: '🇦🇺 Austrália',
+  NZ: '🇳🇿 Nova Zelândia', JP: '🇯🇵 Japão', AR: '🇦🇷 Argentina',
+  CL: '🇨🇱 Chile', MX: '🇲🇽 México', OTHER: '🌍 Outro',
+}
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 type Alert = Database['public']['Tables']['alerts']['Row']
@@ -26,7 +35,10 @@ export default async function DashboardPage() {
   const { data: rawAlerts } = await supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(5)
   const alerts = rawAlerts as Alert[] | null
 
-  const { data: rawGroupPurchases } = await supabase.from('group_purchases').select('*').eq('ativo', true).order('created_at', { ascending: false }).limit(3)
+  const userPais = profile?.pais ?? null
+  let gpQuery = supabase.from('group_purchases').select('*').eq('ativo', true).order('created_at', { ascending: false }).limit(3)
+  if (userPais) gpQuery = gpQuery.eq('pais', userPais)
+  const { data: rawGroupPurchases } = await gpQuery
   const groupPurchases = rawGroupPurchases as GroupPurchase[] | null
 
   const { data: rawUserPrinters } = await supabase.from('user_printers').select('*, printer_models(*)').eq('user_id', user.id)
@@ -114,13 +126,28 @@ export default async function DashboardPage() {
               <h3 className="font-semibold text-foreground flex items-center gap-2">
                 <ShoppingCart className="w-4 h-4 text-primary" /> Compras do grupo
               </h3>
-              <Link href="/compras">
-                <Button variant="ghost" size="sm" className="text-xs text-primary hover:text-primary h-auto p-0 gap-1">
-                  Ver todas <ChevronRight className="w-3 h-3" />
-                </Button>
-              </Link>
+              <div className="flex items-center gap-2">
+                {userPais && (
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                    {PAIS_LABEL[userPais] ?? userPais}
+                  </Badge>
+                )}
+                <Link href="/compras">
+                  <Button variant="ghost" size="sm" className="text-xs text-primary hover:text-primary h-auto p-0 gap-1">
+                    Ver todas <ChevronRight className="w-3 h-3" />
+                  </Button>
+                </Link>
+              </div>
             </div>
-            {!groupPurchases || groupPurchases.length === 0 ? (
+            {!userPais ? (
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-2">
+                <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-300 leading-relaxed">
+                  <Link href="/perfil" className="underline underline-offset-2 font-medium">Defina seu país</Link>{' '}
+                  no perfil para ver as compras da sua região.
+                </p>
+              </div>
+            ) : !groupPurchases || groupPurchases.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhuma compra ativa agora.</p>
             ) : (
               <div className="space-y-3">

@@ -234,14 +234,9 @@ export default function PerfilPage() {
           </div>
           <div className="space-y-1.5">
             <Label>País</Label>
-            <Select onValueChange={v => setValue('pais', v ?? '')} defaultValue="">
+            <Select value={watch('pais') ?? ''} onValueChange={v => setValue('pais', v ?? '')}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione seu país">
-                  {(value: string | null) => {
-                    if (!value) return null
-                    return PAISES.find(p => p.value === value)?.label ?? value
-                  }}
-                </SelectValue>
+                <SelectValue placeholder="Selecione seu país" />
               </SelectTrigger>
               <SelectContent>
                 {PAISES.map(p => (
@@ -268,7 +263,7 @@ export default function PerfilPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Nível de experiência</Label>
-              <Select onValueChange={v => setValue('nivel_experiencia', v ?? '')} defaultValue="">
+              <Select value={watch('nivel_experiencia') ?? ''} onValueChange={v => setValue('nivel_experiencia', v ?? '')}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>

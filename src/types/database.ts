@@ -105,6 +105,57 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_offers: {
+        Row: {
+          ativo: boolean
+          categoria: string | null
+          created_at: string
+          descricao: string | null
+          destaque: boolean
+          id: string
+          imagem_url: string | null
+          link_compra: string | null
+          pais: string
+          parceiro: string
+          prazo_fim: string | null
+          preco_oferta: number
+          preco_original: number | null
+          produto: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          destaque?: boolean
+          id?: string
+          imagem_url?: string | null
+          link_compra?: string | null
+          pais: string
+          parceiro: string
+          prazo_fim?: string | null
+          preco_oferta: number
+          preco_original?: number | null
+          produto: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          destaque?: boolean
+          id?: string
+          imagem_url?: string | null
+          link_compra?: string | null
+          pais?: string
+          parceiro?: string
+          prazo_fim?: string | null
+          preco_oferta?: number
+          preco_original?: number | null
+          produto?: string
+        }
+        Relationships: []
+      }
       printer_models: {
         Row: {
           bed_size: string

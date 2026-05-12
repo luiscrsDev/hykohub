@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import {
   Loader2, Check, X, Box, Play, Plus,
-  ExternalLink, Clock, CheckCircle2, XCircle, Users, ShoppingCart, Trash2,
+  ExternalLink, Clock, CheckCircle2, XCircle, Users, ShoppingCart, Trash2, Tag, Star,
 } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -35,7 +35,7 @@ const PAISES = [
 ]
 import { MembersCrm } from '@/components/admin/members-crm'
 
-type AdminTab = 'conteudo' | 'membros' | 'compras'
+type AdminTab = 'conteudo' | 'membros' | 'compras' | 'ofertas'
 
 type StlPost = {
   id: string; title: string; description: string | null
@@ -98,7 +98,7 @@ export default function AdminPage() {
   const [sFeatured, setSFeatured] = useState(false)
   const [sSaving, setSSaving] = useState(false)
 
-  // Compras
+  // Compras coletivas
   const [compras, setCompras] = useState<any[]>([])
   const [comprasLoading, setComprasLoading] = useState(false)
   const [showAddCompra, setShowAddCompra] = useState(false)
@@ -112,6 +112,23 @@ export default function AdminPage() {
   const [cPrazo, setCPrazo] = useState('')
   const [cImagem, setCImagem] = useState('')
   const [cSaving, setCSaving] = useState(false)
+
+  // Ofertas de parceiros
+  const [ofertas, setOfertas] = useState<any[]>([])
+  const [ofertasLoading, setOfertasLoading] = useState(false)
+  const [showAddOferta, setShowAddOferta] = useState(false)
+  const [oProduto, setOProduto] = useState('')
+  const [oParceiro, setOParceiro] = useState('')
+  const [oDescricao, setODescricao] = useState('')
+  const [oPais, setOPais] = useState('')
+  const [oPrecoOriginal, setOPrecoOriginal] = useState('')
+  const [oPrecoOferta, setOPrecoOferta] = useState('')
+  const [oLinkCompra, setOLinkCompra] = useState('')
+  const [oImagem, setOImagem] = useState('')
+  const [oCategoria, setOCategoria] = useState('')
+  const [oPrazoFim, setOPrazoFim] = useState('')
+  const [oDestaque, setODestaque] = useState(false)
+  const [oSaving, setOSaving] = useState(false)
 
   // Video
   const [videoFilter, setVideoFilter] = useState<StatusFilter>('pending')
@@ -141,6 +158,7 @@ export default function AdminPage() {
   useEffect(() => { if (isAdmin) loadStl() }, [isAdmin, stlFilter])
   useEffect(() => { if (isAdmin) loadVideos() }, [isAdmin, videoFilter])
   useEffect(() => { if (isAdmin && tab === 'compras') loadCompras() }, [isAdmin, tab])
+  useEffect(() => { if (isAdmin && tab === 'ofertas') loadOfertas() }, [isAdmin, tab])
 
   async function loadStl() {
     setStlLoading(true)
@@ -163,6 +181,61 @@ export default function AdminPage() {
     const { data } = await supabase.from('group_purchases').select('*').order('created_at', { ascending: false })
     setCompras(data ?? [])
     setComprasLoading(false)
+  }
+
+  async function loadOfertas() {
+    setOfertasLoading(true)
+    const { data } = await supabase.from('partner_offers').select('*').order('created_at', { ascending: false })
+    setOfertas(data ?? [])
+    setOfertasLoading(false)
+  }
+
+  async function handleAddOferta() {
+    if (!oProduto.trim() || !oParceiro.trim() || !oPais.trim() || !oPrecoOferta) {
+      toast.error('Preencha produto, parceiro, país e preço da oferta')
+      return
+    }
+    setOSaving(true)
+    const { error } = await supabase.from('partner_offers').insert({
+      produto: oProduto.trim(),
+      parceiro: oParceiro.trim(),
+      descricao: oDescricao.trim() || null,
+      pais: oPais.trim().toUpperCase(),
+      preco_original: oPrecoOriginal ? parseFloat(oPrecoOriginal) : null,
+      preco_oferta: parseFloat(oPrecoOferta),
+      link_compra: oLinkCompra.trim() || null,
+      imagem_url: oImagem.trim() || null,
+      categoria: oCategoria.trim() || null,
+      prazo_fim: oPrazoFim || null,
+      destaque: oDestaque,
+      ativo: true,
+    } as never)
+    setOSaving(false)
+    if (error) { toast.error('Erro ao cadastrar oferta'); return }
+    toast.success('Oferta publicada!')
+    setOProduto(''); setOParceiro(''); setODescricao(''); setOPais('')
+    setOPrecoOriginal(''); setOPrecoOferta(''); setOLinkCompra('')
+    setOImagem(''); setOCategoria(''); setOPrazoFim(''); setODestaque(false)
+    setShowAddOferta(false)
+    loadOfertas()
+  }
+
+  async function toggleOfertaAtivo(id: string, ativo: boolean) {
+    await supabase.from('partner_offers').update({ ativo } as never).eq('id', id)
+    setOfertas(prev => prev.map(o => o.id === id ? { ...o, ativo } : o))
+  }
+
+  async function toggleOfertaDestaque(id: string, destaque: boolean) {
+    await supabase.from('partner_offers').update({ destaque } as never).eq('id', id)
+    setOfertas(prev => prev.map(o => o.id === id ? { ...o, destaque } : o))
+  }
+
+  async function deleteOferta(id: string) {
+    if (!confirm('Excluir esta oferta?')) return
+    const { error } = await supabase.from('partner_offers').delete().eq('id', id)
+    if (error) { toast.error('Erro ao excluir'); return }
+    toast.success('Oferta excluída')
+    setOfertas(prev => prev.filter(o => o.id !== id))
   }
 
   async function handleAddCompra() {
@@ -306,7 +379,8 @@ export default function AdminPage() {
       <div className="flex gap-1 p-1 bg-muted/40 rounded-xl w-fit border border-border/40">
         {([
           { key: 'conteudo', label: 'Conteúdo', icon: Box },
-          { key: 'compras', label: 'Compras', icon: ShoppingCart },
+          { key: 'ofertas', label: 'Ofertas', icon: Tag },
+          { key: 'compras', label: 'Coletivas', icon: ShoppingCart },
           { key: 'membros', label: 'Membros', icon: Users },
         ] as { key: AdminTab; label: string; icon: any }[]).map(({ key, label, icon: Icon }) => (
           <button
@@ -322,6 +396,131 @@ export default function AdminPage() {
       </div>
 
       {tab === 'membros' && <MembersCrm />}
+
+      {tab === 'ofertas' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-foreground flex items-center gap-2">
+              <Tag className="w-4 h-4 text-primary" /> Ofertas de parceiros
+            </h2>
+            <Button size="sm" onClick={() => setShowAddOferta(v => !v)}
+              variant={showAddOferta ? 'outline' : 'default'} className="gap-1.5 h-8 text-xs">
+              {showAddOferta ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+              {showAddOferta ? 'Cancelar' : 'Nova oferta'}
+            </Button>
+          </div>
+
+          {showAddOferta && (
+            <div className="bg-card border border-border/60 rounded-2xl p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2 space-y-1.5">
+                  <Label className="text-xs">Produto <span className="text-destructive">*</span></Label>
+                  <Input className="h-8 text-sm" placeholder="Ex: Filamento PETG Premium 1kg" value={oProduto} onChange={e => setOProduto(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Parceiro / Marca <span className="text-destructive">*</span></Label>
+                  <Input className="h-8 text-sm" placeholder="Ex: Polymaker" value={oParceiro} onChange={e => setOParceiro(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">País <span className="text-destructive">*</span></Label>
+                  <Select value={oPais} onValueChange={v => setOPais(v ?? '')}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAISES.map(p => (
+                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Preço original (R$) <span className="text-muted-foreground">(opcional)</span></Label>
+                  <Input className="h-8 text-sm" type="number" step="0.01" placeholder="0.00" value={oPrecoOriginal} onChange={e => setOPrecoOriginal(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Preço da oferta (R$) <span className="text-destructive">*</span></Label>
+                  <Input className="h-8 text-sm" type="number" step="0.01" placeholder="0.00" value={oPrecoOferta} onChange={e => setOPrecoOferta(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Categoria <span className="text-muted-foreground">(opcional)</span></Label>
+                  <Input className="h-8 text-sm" placeholder="Ex: Filamento, Acessório..." value={oCategoria} onChange={e => setOCategoria(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Válido até <span className="text-muted-foreground">(opcional)</span></Label>
+                  <Input className="h-8 text-sm" type="date" value={oPrazoFim} onChange={e => setOPrazoFim(e.target.value)} />
+                </div>
+                <div className="col-span-2 space-y-1.5">
+                  <Label className="text-xs">Link de compra <span className="text-muted-foreground">(opcional)</span></Label>
+                  <Input className="h-8 text-sm" placeholder="https://..." value={oLinkCompra} onChange={e => setOLinkCompra(e.target.value)} />
+                </div>
+                <div className="col-span-2 space-y-1.5">
+                  <Label className="text-xs">Imagem URL <span className="text-muted-foreground">(opcional)</span></Label>
+                  <Input className="h-8 text-sm" placeholder="https://..." value={oImagem} onChange={e => setOImagem(e.target.value)} />
+                </div>
+                <div className="col-span-2 space-y-1.5">
+                  <Label className="text-xs">Descrição <span className="text-muted-foreground">(opcional)</span></Label>
+                  <Input className="h-8 text-sm" placeholder="Breve descrição da oferta..." value={oDescricao} onChange={e => setODescricao(e.target.value)} />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setODestaque(v => !v)}
+                  className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors shrink-0 ${oDestaque ? 'bg-primary border-primary' : 'border-border'}`}>
+                  {oDestaque && <Check className="w-2.5 h-2.5 text-white" />}
+                </button>
+                <span className="text-xs text-muted-foreground cursor-pointer" onClick={() => setODestaque(v => !v)}>Destacar oferta</span>
+              </div>
+              <Button size="sm" onClick={handleAddOferta} disabled={oSaving} className="w-full gap-2 h-8">
+                {oSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Publicar oferta
+              </Button>
+            </div>
+          )}
+
+          {ofertasLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+          ) : ofertas.length === 0 ? (
+            <div className="bg-card border border-border/60 rounded-xl p-8 text-center">
+              <p className="text-sm text-muted-foreground">Nenhuma oferta cadastrada.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {ofertas.map(o => (
+                <div key={o.id} className="bg-card border border-border/60 rounded-xl p-4 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-medium text-foreground truncate">{o.produto}</p>
+                      <Badge variant="outline" className="text-xs shrink-0">{o.pais}</Badge>
+                      {o.destaque && <Badge className="text-xs shrink-0 bg-accent/10 text-accent border-accent/20"><Star className="w-2.5 h-2.5 mr-1" />Destaque</Badge>}
+                      <Badge className={`text-xs shrink-0 ${o.ativo ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-muted text-muted-foreground'}`}>
+                        {o.ativo ? 'Ativa' : 'Inativa'}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {o.parceiro} · R$ {o.preco_oferta?.toFixed(2)}
+                      {o.preco_original ? ` (de R$ ${o.preco_original?.toFixed(2)})` : ''}
+                      {o.categoria ? ` · ${o.categoria}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex gap-1.5 shrink-0">
+                    <button onClick={() => toggleOfertaDestaque(o.id, !o.destaque)}
+                      className="px-2 py-1 rounded-lg text-xs font-medium bg-muted/60 text-muted-foreground hover:text-foreground border border-border/40 transition-colors">
+                      {o.destaque ? 'Remover ★' : '★ Destacar'}
+                    </button>
+                    <button onClick={() => toggleOfertaAtivo(o.id, !o.ativo)}
+                      className="px-2 py-1 rounded-lg text-xs font-medium bg-muted/60 text-muted-foreground hover:text-foreground border border-border/40 transition-colors">
+                      {o.ativo ? 'Desativar' : 'Ativar'}
+                    </button>
+                    <button onClick={() => deleteOferta(o.id)}
+                      className="p-1.5 rounded-lg text-destructive hover:bg-destructive/10 border border-destructive/20 transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {tab === 'compras' && (
         <div className="space-y-4">
