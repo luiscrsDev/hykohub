@@ -22,7 +22,7 @@ const PILLARS = [
   {
     icon: Briefcase,
     title: 'Pool Comercial Pro',
-    description: "Transforme sua impressora em renda recorrente. Jobs de marcas como Lowe's alocados para Pros qualificados conforme capacidade real.",
+    description: "Transforme sua impressora em renda recorrente. Jobs de redes de lojas alocados para Pros qualificados conforme capacidade real.",
     cta: 'Quero ser Pro',
   },
 ]
@@ -162,7 +162,7 @@ export default function LandingPage() {
             <div className="max-w-3xl mx-auto text-center">
               <Badge className="mb-6 bg-accent/10 text-accent border-accent/20">Pool Comercial Pro</Badge>
               <h2 className="text-4xl font-bold text-foreground mb-6">
-                Estamos em conversas avançadas com Lowe&apos;s para um piloto de produção sob demanda
+                Estamos em conversas avançadas com redes de lojas para um piloto de produção sob demanda
               </h2>
               <p className="text-lg text-muted-foreground mb-8">
                 Não temos data fechada — pedidos B2B grandes seguem ritmo do cliente, não do nosso.{' '}
