@@ -11,6 +11,20 @@ export const metadata: Metadata = {
   title: 'HykoHub — Comunidade Maker de Impressão 3D',
   description: 'A HykoHub reúne makers brasileiros que imprimem no Mundo. Aprenda, troque, compre em grupo e transforme criatividade em soluções reais.',
   keywords: ['impressão 3D', 'maker', 'comunidade', 'fabricação digital', 'Bambu', 'Creality', 'Prusa'],
+  metadataBase: new URL('https://www.hykohub.com'),
+  openGraph: {
+    title: 'HykoHub — Comunidade Maker de Impressão 3D',
+    description: 'Aprenda, compre em grupo e transforme sua impressora em renda. A comunidade para quem imprime a sério.',
+    url: 'https://www.hykohub.com',
+    siteName: 'HykoHub',
+    locale: 'pt_BR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'HykoHub — Comunidade Maker de Impressão 3D',
+    description: 'Aprenda, compre em grupo e transforme sua impressora em renda.',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
