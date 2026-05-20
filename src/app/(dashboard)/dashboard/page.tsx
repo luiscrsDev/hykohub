@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowRight, Bell, ShoppingCart, Printer, Star, ChevronRight, Package, Box, Play, MapPin } from 'lucide-react'
+import { StlCardMini } from '@/components/ui/stl-card-mini'
 
 const PAIS_LABEL: Record<string, string> = {
   BR: '🇧🇷 Brasil', PT: '🇵🇹 Portugal', US: '🇺🇸 EUA',
@@ -202,17 +203,14 @@ export default async function DashboardPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-2.5">
                   {stlPosts.map(p => (
-                    <a key={p.id} href={p.external_link ?? p.file_url ?? '#'} target="_blank" rel="noopener noreferrer"
-                      className="bg-card border border-border/60 rounded-xl overflow-hidden hover:border-primary/30 transition-colors group">
-                      <div className="aspect-square bg-muted/40 flex items-center justify-center overflow-hidden">
-                        {p.thumbnail_url
-                          ? <img src={p.thumbnail_url} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                          : <Box className="w-8 h-8 text-muted-foreground/30" />}
-                      </div>
-                      <div className="p-2">
-                        <p className="text-xs font-medium text-foreground line-clamp-2 leading-tight">{p.title}</p>
-                      </div>
-                    </a>
+                    <StlCardMini
+                      key={p.id}
+                      id={p.id}
+                      title={p.title}
+                      thumbnail_url={p.thumbnail_url}
+                      external_link={p.external_link}
+                      file_url={p.file_url}
+                    />
                   ))}
                 </div>
               </div>

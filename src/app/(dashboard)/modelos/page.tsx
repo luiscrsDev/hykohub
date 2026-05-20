@@ -158,7 +158,7 @@ function StlCard({ post }: { post: StlPost }) {
     if (!url) return
     window.open(url, '_blank', 'noopener,noreferrer')
     setCount(c => c + 1)
-    await supabase.from('stl_posts').update({ download_count: count + 1 } as never).eq('id', post.id)
+    await supabase.rpc('increment_download_count', { post_id: post.id })
   }
 
   return (

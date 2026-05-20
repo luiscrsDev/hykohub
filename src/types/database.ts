@@ -563,6 +563,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      increment_download_count: {
+        Args: { post_id: string }
+        Returns: void
+      }
       match_video_chunks: {
         Args: {
           match_count?: number
