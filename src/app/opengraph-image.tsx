@@ -66,11 +66,11 @@ export default function OGImage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{
               width: 80, height: 80, borderRadius: 20,
-              background: 'linear-gradient(135deg, #6366f1, #22d3ee)',
+              background: 'white',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 42, fontWeight: 800, color: 'white',
+              overflow: 'hidden',
             }}>
-              H
+              <img src="https://www.hykohub.com/logo.png" width={72} height={72} style={{ objectFit: 'contain' }} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 72, fontWeight: 800, color: 'white', lineHeight: 1, letterSpacing: '-2px' }}>
