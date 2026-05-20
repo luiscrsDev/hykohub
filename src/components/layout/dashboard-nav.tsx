@@ -37,7 +37,7 @@ const TIER_COLORS: Record<MemberTier, string> = {
 }
 
 const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Feed', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
   { href: '/modelos', label: 'Modelos', icon: Box },
   { href: '/videos', label: 'Vídeos', icon: Play },
   { href: '/ofertas', label: 'Ofertas', icon: Tag },

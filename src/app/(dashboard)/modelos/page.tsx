@@ -149,7 +149,17 @@ export default function ModelosPage() {
 }
 
 function StlCard({ post }: { post: StlPost }) {
+  const supabase = createClient()
   const thumb = post.thumbnail_url ?? null
+  const [count, setCount] = useState(post.download_count)
+  const url = post.external_link ?? post.file_url ?? null
+
+  async function handleOpen() {
+    if (!url) return
+    window.open(url, '_blank', 'noopener,noreferrer')
+    setCount(c => c + 1)
+    await supabase.from('stl_posts').update({ download_count: count + 1 } as never).eq('id', post.id)
+  }
 
   return (
     <div className="bg-card border border-border/60 rounded-2xl overflow-hidden hover:border-primary/30 transition-colors group">
@@ -186,17 +196,15 @@ function StlCard({ post }: { post: StlPost }) {
         )}
         <div className="flex items-center justify-between pt-1">
           <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <Download className="w-3 h-3" /> {post.download_count}
+            <Download className="w-3 h-3" /> {count}
           </span>
-          {(post.external_link || post.file_url) && (
-            <a
-              href={post.external_link ?? post.file_url ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
+          {url && (
+            <button
+              onClick={handleOpen}
               className="text-xs text-primary hover:underline flex items-center gap-1 font-medium"
             >
               Ver modelo <ExternalLink className="w-3 h-3" />
-            </a>
+            </button>
           )}
         </div>
       </div>
