@@ -10,22 +10,58 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, CheckCircle2 } from 'lucide-react'
 import { HykoHubLogo } from '@/components/ui/logo'
 
-const schema = z.object({
+const ESTADOS_US = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC']
+const ESTADOS_BR = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
+
+const loginSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'Mínimo 6 caracteres'),
 })
-type FormData = z.infer<typeof schema>
 
-export default function LoginPage() {
+const cadastroSchema = z.object({
+  nome: z.string().min(2, 'Informe seu nome'),
+  email: z.string().email('Email inválido'),
+  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  cidade: z.string().min(2, 'Informe sua cidade'),
+  estado: z.string().min(2, 'Selecione o estado'),
+  tem_impressora: z.boolean(),
+  lgpd_aceito: z.literal(true, { errorMap: () => ({ message: 'Você precisa aceitar os termos' }) }),
+})
+
+type LoginData = z.infer<typeof loginSchema>
+type CadastroData = z.infer<typeof cadastroSchema>
+
+export default function AuthPage() {
   const router = useRouter()
+  const [mode, setMode] = useState<'login' | 'cadastro'>('login')
   const [loading, setLoading] = useState(false)
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const [done, setDone] = useState(false)
 
-  async function onSubmit(data: FormData) {
+  const loginForm = useForm<LoginData>({ resolver: zodResolver(loginSchema) })
+  const cadastroForm = useForm<CadastroData>({
+    resolver: zodResolver(cadastroSchema),
+    defaultValues: { tem_impressora: false, lgpd_aceito: undefined },
+  })
+
+  const temImpressora = cadastroForm.watch('tem_impressora')
+  const lgpdAceito = cadastroForm.watch('lgpd_aceito')
+
+  async function loginWithGoogle() {
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${location.origin}/auth/callback` },
+    })
+    if (error) toast.error('Erro ao entrar com Google: ' + error.message)
+  }
+
+  async function onLogin(data: LoginData) {
     setLoading(true)
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword(data)
@@ -38,32 +74,91 @@ export default function LoginPage() {
     router.refresh()
   }
 
-  async function loginWithGoogle() {
+  async function onCadastro(data: CadastroData) {
+    setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${location.origin}/auth/callback` },
+    const { error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          nome: data.nome,
+          cidade: data.cidade,
+          estado: data.estado,
+          tem_impressora: data.tem_impressora,
+        },
+      },
     })
-    if (error) toast.error('Erro ao entrar com Google: ' + error.message)
+    if (error) {
+      toast.error(error.message)
+      setLoading(false)
+      return
+    }
+    setDone(true)
+    setTimeout(() => router.push('/dashboard'), 2000)
+  }
+
+  if (done) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 px-4">
+        <div className="text-center max-w-md">
+          <CheckCircle2 className="w-16 h-16 text-accent mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo à comunidade!</h2>
+          <p className="text-muted-foreground">Redirecionando para o dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 font-bold text-xl mb-6 text-foreground">
             <HykoHubLogo size={36} />
             <span className="font-display">Hyko<span className="text-primary">Hub</span></span>
           </Link>
-          <h1 className="text-2xl font-bold text-foreground">Bem-vindo de volta</h1>
-          <p className="text-muted-foreground mt-1 text-sm">Entre na sua conta</p>
+          <h1 className="text-2xl font-bold text-foreground">
+            {mode === 'login' ? 'Bem-vindo de volta' : 'Comece em 2 minutos'}
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {mode === 'login' ? 'Entre na sua conta' : 'O que você preenche aqui já vira benefício para você'}
+          </p>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
+        <div className="bg-card border border-border rounded-2xl p-8 shadow-sm space-y-6">
+
+          {/* Toggle */}
+          <div className="flex rounded-xl bg-muted p-1 gap-1">
+            <button
+              type="button"
+              onClick={() => setMode('login')}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                mode === 'login'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Entrar
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('cadastro')}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                mode === 'cadastro'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Criar conta
+            </button>
+          </div>
+
+          {/* Google */}
           <Button
             type="button"
             variant="outline"
-            className="w-full h-11 gap-2 mb-6"
+            className="w-full h-11 gap-2"
             onClick={loginWithGoogle}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -75,32 +170,104 @@ export default function LoginPage() {
             Continuar com Google
           </Button>
 
-          <div className="relative mb-6">
+          <div className="relative">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
             <div className="relative flex justify-center text-xs text-muted-foreground"><span className="bg-card px-3">ou</span></div>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="voce@email.com" {...register('email')} />
-              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" placeholder="••••••••" {...register('password')} />
-              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
-            </div>
-            <Button type="submit" className="w-full h-11" disabled={loading}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Entrar'}
-            </Button>
-          </form>
-        </div>
+          {/* Login form */}
+          {mode === 'login' && (
+            <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="login-email">Email</Label>
+                <Input id="login-email" type="email" placeholder="voce@email.com" {...loginForm.register('email')} />
+                {loginForm.formState.errors.email && <p className="text-xs text-destructive">{loginForm.formState.errors.email.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="login-password">Senha</Label>
+                <Input id="login-password" type="password" placeholder="••••••••" {...loginForm.register('password')} />
+                {loginForm.formState.errors.password && <p className="text-xs text-destructive">{loginForm.formState.errors.password.message}</p>}
+              </div>
+              <Button type="submit" className="w-full h-11" disabled={loading}>
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Entrar'}
+              </Button>
+            </form>
+          )}
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          Ainda não tem conta?{' '}
-          <Link href="/cadastro" className="text-primary font-medium hover:underline">Cadastre-se</Link>
-        </p>
+          {/* Cadastro form */}
+          {mode === 'cadastro' && (
+            <form onSubmit={cadastroForm.handleSubmit(onCadastro)} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="nome">Nome</Label>
+                <Input id="nome" placeholder="Como você quer ser chamado" {...cadastroForm.register('nome')} />
+                {cadastroForm.formState.errors.nome && <p className="text-xs text-destructive">{cadastroForm.formState.errors.nome.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cad-email">Email</Label>
+                <Input id="cad-email" type="email" placeholder="voce@email.com" {...cadastroForm.register('email')} />
+                {cadastroForm.formState.errors.email && <p className="text-xs text-destructive">{cadastroForm.formState.errors.email.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cad-password">Senha</Label>
+                <Input id="cad-password" type="password" placeholder="Mínimo 8 caracteres" {...cadastroForm.register('password')} />
+                {cadastroForm.formState.errors.password && <p className="text-xs text-destructive">{cadastroForm.formState.errors.password.message}</p>}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cidade">Cidade</Label>
+                  <Input id="cidade" placeholder="Sua cidade" {...cadastroForm.register('cidade')} />
+                  {cadastroForm.formState.errors.cidade && <p className="text-xs text-destructive">{cadastroForm.formState.errors.cidade.message}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Estado</Label>
+                  <Select onValueChange={v => cadastroForm.setValue('estado', v ?? '')}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="UF" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div className="px-2 py-1 text-xs text-muted-foreground font-medium">Estados Unidos</div>
+                      {ESTADOS_US.map(e => <SelectItem key={e} value={`US-${e}`}>{e}</SelectItem>)}
+                      <div className="px-2 py-1 text-xs text-muted-foreground font-medium mt-1">Brasil</div>
+                      {ESTADOS_BR.map(e => <SelectItem key={e} value={`BR-${e}`}>{e}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {cadastroForm.formState.errors.estado && <p className="text-xs text-destructive">{cadastroForm.formState.errors.estado.message}</p>}
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-muted/40 border border-border/40">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="tem_impressora"
+                    checked={temImpressora}
+                    onCheckedChange={v => cadastroForm.setValue('tem_impressora', v as boolean)}
+                  />
+                  <div>
+                    <Label htmlFor="tem_impressora" className="font-medium cursor-pointer">Tenho impressora 3D</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">Ativa seu feed personalizado por modelo</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="lgpd"
+                  checked={!!lgpdAceito}
+                  onCheckedChange={v => cadastroForm.setValue('lgpd_aceito', v as true)}
+                />
+                <Label htmlFor="lgpd" className="text-sm text-muted-foreground cursor-pointer leading-relaxed">
+                  Aceito a{' '}
+                  <Link href="/privacidade" className="text-primary hover:underline">Política de Privacidade</Link>
+                  {' '}e os{' '}
+                  <Link href="/termos" className="text-primary hover:underline">Termos de Uso</Link>
+                  {' '}(LGPD/CCPA)
+                </Label>
+              </div>
+              {cadastroForm.formState.errors.lgpd_aceito && <p className="text-xs text-destructive -mt-2">{cadastroForm.formState.errors.lgpd_aceito.message}</p>}
+              <Button type="submit" className="w-full h-11" disabled={loading}>
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar conta'}
+              </Button>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -225,7 +225,7 @@ export default function PerfilPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Básico */}
-        <section className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
+        <section id="basico" className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
           <h2 className="font-semibold text-foreground">Informações básicas</h2>
           <div className="space-y-1.5">
             <Label htmlFor="nome">Nome</Label>
@@ -256,33 +256,13 @@ export default function PerfilPage() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="bio">Bio <span className="text-muted-foreground text-xs">({bio.length}/280)</span></Label>
-            <Textarea id="bio" rows={3} placeholder="Conte um pouco sobre você e seu setup..." {...register('bio')} />
-            {errors.bio && <p className="text-xs text-destructive">{errors.bio.message}</p>}
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>Nível de experiência</Label>
-              <Select value={watch('nivel_experiencia') ?? ''} onValueChange={v => setValue('nivel_experiencia', v ?? '')}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EXPERIENCIA_OPTIONS.map(o => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="whatsapp">WhatsApp (opcional)</Label>
-              <Input id="whatsapp" placeholder="+55 11 99999-9999" {...register('whatsapp')} />
-            </div>
+            <Label htmlFor="whatsapp">WhatsApp (opcional)</Label>
+            <Input id="whatsapp" placeholder="+55 11 99999-9999" {...register('whatsapp')} />
           </div>
         </section>
 
         {/* Impressoras */}
-        <section className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
+        <section id="impressoras" className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
           <div className="flex items-center gap-2">
             <Printer className="w-4 h-4 text-primary" />
             <h2 className="font-semibold text-foreground">Minhas impressoras</h2>
@@ -363,6 +343,29 @@ export default function PerfilPage() {
           </div>
         </section>
 
+        {/* Bio / experiência */}
+        <section id="bio" className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
+          <h2 className="font-semibold text-foreground">Bio & experiência</h2>
+          <div className="space-y-1.5">
+            <Label htmlFor="bio-textarea">Bio <span className="text-muted-foreground text-xs">({bio.length}/280)</span></Label>
+            <Textarea id="bio-textarea" rows={3} placeholder="Conte um pouco sobre você e seu setup..." {...register('bio')} />
+            {errors.bio && <p className="text-xs text-destructive">{errors.bio.message}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label>Nível de experiência</Label>
+            <Select value={watch('nivel_experiencia') ?? ''} onValueChange={v => setValue('nivel_experiencia', v ?? '')}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {EXPERIENCIA_OPTIONS.map(o => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </section>
+
         {/* Filamentos */}
         <section className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
           <h2 className="font-semibold text-foreground">Filamentos que usa</h2>
@@ -419,7 +422,7 @@ export default function PerfilPage() {
         </section>
 
         {/* Operação */}
-        <section className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
+        <section id="operacao" className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
           <h2 className="font-semibold text-foreground">Volume de operação</h2>
           <p className="text-xs text-muted-foreground -mt-2">Permite entrar nas compras do grupo com volume certo</p>
           <div className="grid grid-cols-2 gap-4">

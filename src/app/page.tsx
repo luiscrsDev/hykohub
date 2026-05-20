@@ -52,7 +52,7 @@ export default function LandingPage() {
             <Link href="/login">
               <Button variant="ghost" size="sm">Entrar</Button>
             </Link>
-            <Link href="/cadastro">
+            <Link href="/login">
               <Button size="sm" className="bg-primary hover:bg-primary/90">
                 Entrar na comunidade
               </Button>
@@ -79,7 +79,7 @@ export default function LandingPage() {
                 <strong className="text-foreground">Comece em 2 minutos.</strong>
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/cadastro">
+                <Link href="/login">
                   <Button size="lg" className="bg-primary hover:bg-primary/90 text-white h-12 px-8 text-base gap-2 w-full sm:w-auto">
                     Entrar na comunidade
                     <ArrowRight className="w-4 h-4" />
@@ -118,7 +118,7 @@ export default function LandingPage() {
                     <h3 className="text-xl font-semibold text-foreground mb-3">{title}</h3>
                     <p className="text-muted-foreground leading-relaxed">{description}</p>
                   </div>
-                  <Link href="/cadastro" className="mt-auto">
+                  <Link href="/login" className="mt-auto">
                     <Button variant="ghost" className="text-primary hover:text-primary hover:bg-primary/5 p-0 h-auto gap-1.5">
                       {cta} <ArrowRight className="w-4 h-4" />
                     </Button>
@@ -183,7 +183,7 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <Link href="/cadastro">
+              <Link href="/login">
                 <Button size="lg" className="bg-accent hover:bg-accent/90 text-white h-12 px-8 gap-2">
                   Quero estar nessa fila
                   <ArrowRight className="w-4 h-4" />
@@ -202,7 +202,7 @@ export default function LandingPage() {
             <p className="text-primary-foreground/80 mb-8 text-lg">
               Você só preenche o que faz sentido para você — quem quer só aprender, preenche menos. Quem quer renda, preenche mais.
             </p>
-            <Link href="/cadastro">
+            <Link href="/login">
               <Button size="lg" className="bg-white text-primary hover:bg-white/90 h-12 px-8 gap-2 font-semibold">
                 Entrar na comunidade
                 <ArrowRight className="w-4 h-4" />

@@ -67,26 +67,31 @@ export default async function DashboardPage() {
           <div className="w-full bg-muted rounded-full h-1.5 mb-5">
             <div className="bg-primary h-1.5 rounded-full transition-all duration-500" style={{ width: `${completeness.pct}%` }} />
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex items-start gap-0">
             {completeness.steps.map((step, i) => {
               const isNext = !step.done && completeness.steps.slice(0, i).every(s => s.done)
+              const isLast = i === completeness.steps.length - 1
               return (
-                <Link key={step.label} href={step.href}>
-                  <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
-                    step.done ? 'opacity-50' : isNext ? 'bg-primary/8 border border-primary/20 hover:bg-primary/12' : 'hover:bg-muted/60'
-                  }`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
-                      step.done ? 'bg-accent/20 text-accent' : isNext ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {step.done ? '✓' : i + 1}
+                <Link key={step.label} href={step.href} className="flex-1 group">
+                  <div className="flex flex-col items-center text-center px-1">
+                    <div className="flex items-center w-full mb-2">
+                      <div className={`h-0.5 flex-1 transition-colors ${i === 0 ? 'opacity-0' : step.done ? 'bg-accent' : 'bg-border'}`} />
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-all ${
+                        step.done
+                          ? 'bg-accent/20 text-accent'
+                          : isNext
+                          ? 'bg-primary text-white shadow-md shadow-primary/30 group-hover:shadow-primary/50'
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {step.done ? '✓' : i + 1}
+                      </div>
+                      <div className={`h-0.5 flex-1 transition-colors ${isLast ? 'opacity-0' : step.done ? 'bg-accent' : 'bg-border'}`} />
                     </div>
-                    <span className={`text-sm flex-1 ${
-                      step.done ? 'text-muted-foreground line-through' : isNext ? 'text-foreground font-medium' : 'text-muted-foreground'
+                    <span className={`text-xs leading-tight ${
+                      step.done ? 'text-muted-foreground' : isNext ? 'text-foreground font-medium' : 'text-muted-foreground'
                     }`}>{step.label}</span>
                     {isNext && (
-                      <span className="text-xs text-primary font-medium flex items-center gap-1 shrink-0">
-                        Fazer agora <ArrowRight className="w-3 h-3" />
-                      </span>
+                      <span className="text-xs text-primary font-medium mt-1">Fazer agora</span>
                     )}
                   </div>
                 </Link>
@@ -355,10 +360,10 @@ function calcCompleteness(
   printers: UserPrinter[] | null
 ): { pct: number; nextUnlock: string; steps: { label: string; done: boolean; href: string }[] } {
   const steps = [
-    { label: 'Dados básicos', done: !!(profile?.nome && (profile as any)?.pais && profile?.cidade), href: '/perfil' },
-    { label: 'Impressora cadastrada', done: !!(printers && printers.length > 0), href: '/perfil' },
-    { label: 'Bio & experiência', done: !!(profile?.bio && profile?.nivel_experiencia), href: '/perfil' },
-    { label: 'Consumo mensal', done: !!(profile?.consumo_mensal_kg), href: '/perfil' },
+    { label: 'Dados básicos', done: !!(profile?.nome && (profile as any)?.pais && profile?.cidade), href: '/perfil#basico' },
+    { label: 'Impressora cadastrada', done: !!(printers && printers.length > 0), href: '/perfil#impressoras' },
+    { label: 'Bio & experiência', done: !!(profile?.nivel_experiencia), href: '/perfil#bio' },
+    { label: 'Consumo mensal', done: !!(profile?.consumo_mensal_kg), href: '/perfil#operacao' },
     { label: 'Interesse Pro', done: profile?.interesse_pool === 'sim' || profile?.interesse_pool === 'talvez', href: '/vire-pro' },
   ]
   const done = steps.filter(s => s.done).length
