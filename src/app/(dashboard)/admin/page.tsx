@@ -435,11 +435,11 @@ export default function AdminPage() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Preço original (R$) <span className="text-muted-foreground">(opcional)</span></Label>
+                  <Label className="text-xs">Preço original <span className="text-muted-foreground">(opcional)</span></Label>
                   <Input className="h-8 text-sm" type="number" step="0.01" placeholder="0.00" value={oPrecoOriginal} onChange={e => setOPrecoOriginal(e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Preço da oferta (R$) <span className="text-destructive">*</span></Label>
+                  <Label className="text-xs">Preço da oferta <span className="text-destructive">*</span></Label>
                   <Input className="h-8 text-sm" type="number" step="0.01" placeholder="0.00" value={oPrecoOferta} onChange={e => setOPrecoOferta(e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
@@ -496,8 +496,8 @@ export default function AdminPage() {
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {o.parceiro} · R$ {o.preco_oferta?.toFixed(2)}
-                      {o.preco_original ? ` (de R$ ${o.preco_original?.toFixed(2)})` : ''}
+                      {o.parceiro} · {o.preco_oferta?.toFixed(2)}
+                      {o.preco_original ? ` (de ${o.preco_original?.toFixed(2)})` : ''}
                       {o.categoria ? ` · ${o.categoria}` : ''}
                     </p>
                   </div>
