@@ -123,6 +123,8 @@ export default function AdminPage() {
   const [oPais, setOPais] = useState('')
   const [oPrecoOriginal, setOPrecoOriginal] = useState('')
   const [oPrecoOferta, setOPrecoOferta] = useState('')
+  const [oDescontoPercentual, setODescontoPercentual] = useState('')
+  const [oTipoOferta, setOTipoOferta] = useState<'preco' | 'percentual'>('preco')
   const [oLinkCompra, setOLinkCompra] = useState('')
   const [oImagem, setOImagem] = useState('')
   const [oCategoria, setOCategoria] = useState('')
@@ -191,8 +193,16 @@ export default function AdminPage() {
   }
 
   async function handleAddOferta() {
-    if (!oProduto.trim() || !oParceiro.trim() || !oPais.trim() || !oPrecoOferta) {
-      toast.error('Preencha produto, parceiro, país e preço da oferta')
+    if (!oProduto.trim() || !oParceiro.trim() || !oPais.trim()) {
+      toast.error('Preencha produto, parceiro e país')
+      return
+    }
+    if (oTipoOferta === 'preco' && !oPrecoOferta) {
+      toast.error('Informe o preço da oferta')
+      return
+    }
+    if (oTipoOferta === 'percentual' && !oDescontoPercentual) {
+      toast.error('Informe o percentual de desconto')
       return
     }
     setOSaving(true)
@@ -202,7 +212,8 @@ export default function AdminPage() {
       descricao: oDescricao.trim() || null,
       pais: oPais.trim().toUpperCase(),
       preco_original: oPrecoOriginal ? parseFloat(oPrecoOriginal) : null,
-      preco_oferta: parseFloat(oPrecoOferta),
+      preco_oferta: oTipoOferta === 'preco' && oPrecoOferta ? parseFloat(oPrecoOferta) : null,
+      desconto_percentual: oTipoOferta === 'percentual' && oDescontoPercentual ? parseFloat(oDescontoPercentual) : null,
       link_compra: oLinkCompra.trim() || null,
       imagem_url: oImagem.trim() || null,
       categoria: oCategoria.trim() || null,
@@ -214,7 +225,8 @@ export default function AdminPage() {
     if (error) { toast.error('Erro ao cadastrar oferta'); return }
     toast.success('Oferta publicada!')
     setOProduto(''); setOParceiro(''); setODescricao(''); setOPais('')
-    setOPrecoOriginal(''); setOPrecoOferta(''); setOLinkCompra('')
+    setOPrecoOriginal(''); setOPrecoOferta(''); setODescontoPercentual('')
+    setOTipoOferta('preco'); setOLinkCompra('')
     setOImagem(''); setOCategoria(''); setOPrazoFim(''); setODestaque(false)
     setShowAddOferta(false)
     loadOfertas()
@@ -434,14 +446,36 @@ export default function AdminPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Preço original <span className="text-muted-foreground">(opcional)</span></Label>
-                  <Input className="h-8 text-sm" type="number" step="0.01" placeholder="0.00" value={oPrecoOriginal} onChange={e => setOPrecoOriginal(e.target.value)} />
+                <div className="col-span-2 space-y-1.5">
+                  <Label className="text-xs">Tipo de oferta <span className="text-destructive">*</span></Label>
+                  <div className="flex gap-1 p-1 bg-muted/40 rounded-lg w-fit border border-border/40">
+                    <button type="button" onClick={() => setOTipoOferta('preco')}
+                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${oTipoOferta === 'preco' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                      Preço fixo
+                    </button>
+                    <button type="button" onClick={() => setOTipoOferta('percentual')}
+                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${oTipoOferta === 'percentual' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+                      % Desconto
+                    </button>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Preço da oferta <span className="text-destructive">*</span></Label>
-                  <Input className="h-8 text-sm" type="number" step="0.01" placeholder="0.00" value={oPrecoOferta} onChange={e => setOPrecoOferta(e.target.value)} />
-                </div>
+                {oTipoOferta === 'preco' ? (
+                  <>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Preço original <span className="text-muted-foreground">(opcional)</span></Label>
+                      <Input className="h-8 text-sm" type="number" step="0.01" placeholder="0.00" value={oPrecoOriginal} onChange={e => setOPrecoOriginal(e.target.value)} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Preço da oferta <span className="text-destructive">*</span></Label>
+                      <Input className="h-8 text-sm" type="number" step="0.01" placeholder="0.00" value={oPrecoOferta} onChange={e => setOPrecoOferta(e.target.value)} />
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Desconto (%) <span className="text-destructive">*</span></Label>
+                    <Input className="h-8 text-sm" type="number" min="1" max="100" placeholder="Ex: 20" value={oDescontoPercentual} onChange={e => setODescontoPercentual(e.target.value)} />
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <Label className="text-xs">Categoria <span className="text-muted-foreground">(opcional)</span></Label>
                   <Input className="h-8 text-sm" placeholder="Ex: Filamento, Acessório..." value={oCategoria} onChange={e => setOCategoria(e.target.value)} />
@@ -496,8 +530,8 @@ export default function AdminPage() {
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {o.parceiro} · {o.preco_oferta?.toFixed(2)}
-                      {o.preco_original ? ` (de ${o.preco_original?.toFixed(2)})` : ''}
+                      {o.parceiro}
+                      {o.desconto_percentual ? ` · ${o.desconto_percentual}% OFF` : o.preco_oferta ? ` · ${o.preco_oferta?.toFixed(2)}${o.preco_original ? ` (de ${o.preco_original?.toFixed(2)})` : ''}` : ''}
                       {o.categoria ? ` · ${o.categoria}` : ''}
                     </p>
                   </div>
