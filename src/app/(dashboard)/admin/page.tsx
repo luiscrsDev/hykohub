@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -81,6 +82,7 @@ const STATUS_OPTIONS: { key: StatusFilter; label: string; icon: any; colors: str
 
 export default function AdminPage() {
   const supabase = createClient()
+  const router = useRouter()
   const [checking, setChecking] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [tab, setTab] = useState<AdminTab>('conteudo')
@@ -151,7 +153,9 @@ export default function AdminPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setChecking(false); return }
       const { data } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
-      setIsAdmin(!!(data as any)?.is_admin)
+      const admin = !!(data as any)?.is_admin
+      if (!admin) { router.replace('/dashboard'); return }
+      setIsAdmin(true)
       setChecking(false)
     }
     checkAdmin()
