@@ -41,7 +41,7 @@ export default function AuthPage() {
   const router = useRouter()
   const [mode, setMode] = useState<'login' | 'cadastro'>('login')
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
+  const [done, setDone] = useState<'confirmar' | 'entrando' | false>(false)
 
   const loginForm = useForm<LoginData>({ resolver: zodResolver(loginSchema) })
   const cadastroForm = useForm<CadastroData>({
@@ -77,7 +77,7 @@ export default function AuthPage() {
   async function onCadastro(data: CadastroData) {
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -94,8 +94,13 @@ export default function AuthPage() {
       setLoading(false)
       return
     }
-    setDone(true)
-    setTimeout(() => router.push('/dashboard'), 2000)
+    // session null = Supabase enviou email de confirmação
+    if (!signUpData?.session) {
+      setDone('confirmar')
+    } else {
+      setDone('entrando')
+      setTimeout(() => router.push('/dashboard'), 1500)
+    }
   }
 
   if (done) {
@@ -103,8 +108,20 @@ export default function AuthPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 px-4">
         <div className="text-center max-w-md">
           <CheckCircle2 className="w-16 h-16 text-accent mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo à comunidade!</h2>
-          <p className="text-muted-foreground">Redirecionando para o dashboard...</p>
+          {done === 'confirmar' ? (
+            <>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Verifique seu email</h2>
+              <p className="text-muted-foreground">
+                Enviamos um link de confirmação para o seu email.<br />
+                Clique no link para ativar sua conta e acessar o dashboard.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo à comunidade!</h2>
+              <p className="text-muted-foreground">Redirecionando para o dashboard...</p>
+            </>
+          )}
         </div>
       </div>
     )
