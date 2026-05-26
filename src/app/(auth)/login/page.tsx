@@ -16,8 +16,22 @@ import { toast } from 'sonner'
 import { Loader2, CheckCircle2 } from 'lucide-react'
 import { HykoHubLogo } from '@/components/ui/logo'
 
-const ESTADOS_US = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC']
-const ESTADOS_BR = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
+const PAISES = [
+  { value: 'BR', label: '🇧🇷 Brasil' },
+  { value: 'US', label: '🇺🇸 Estados Unidos' },
+  { value: 'PT', label: '🇵🇹 Portugal' },
+  { value: 'GB', label: '🇬🇧 Reino Unido' },
+  { value: 'IE', label: '🇮🇪 Irlanda' },
+  { value: 'OTHER', label: '🌍 Outro' },
+]
+
+const ESTADOS: Record<string, string[]> = {
+  BR: ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'],
+  US: ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'],
+  PT: ['Aveiro','Beja','Braga','Bragança','Castelo Branco','Coimbra','Évora','Faro','Guarda','Leiria','Lisboa','Portalegre','Porto','Santarém','Setúbal','Viana do Castelo','Vila Real','Viseu','Açores','Madeira'],
+  GB: ['England','Scotland','Wales','Northern Ireland'],
+  IE: ['Carlow','Cavan','Clare','Cork','Donegal','Dublin','Galway','Kerry','Kildare','Kilkenny','Laois','Leitrim','Limerick','Longford','Louth','Mayo','Meath','Monaghan','Offaly','Roscommon','Sligo','Tipperary','Waterford','Westmeath','Wexford','Wicklow'],
+}
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -28,8 +42,9 @@ const cadastroSchema = z.object({
   nome: z.string().min(2, 'Informe seu nome'),
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Mínimo 8 caracteres'),
+  pais: z.string().min(2, 'Selecione o país'),
   cidade: z.string().min(2, 'Informe sua cidade'),
-  estado: z.string().min(2, 'Selecione o estado'),
+  estado: z.string().min(1, 'Selecione o estado'),
   tem_impressora: z.boolean(),
   lgpd_aceito: z.literal(true, { errorMap: () => ({ message: 'Você precisa aceitar os termos' }) }),
 })
@@ -41,7 +56,7 @@ export default function AuthPage() {
   const router = useRouter()
   const [mode, setMode] = useState<'login' | 'cadastro'>('login')
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
+  const [done, setDone] = useState<'confirmar' | 'entrando' | false>(false)
 
   const loginForm = useForm<LoginData>({ resolver: zodResolver(loginSchema) })
   const cadastroForm = useForm<CadastroData>({
@@ -51,6 +66,8 @@ export default function AuthPage() {
 
   const temImpressora = cadastroForm.watch('tem_impressora')
   const lgpdAceito = cadastroForm.watch('lgpd_aceito')
+  const paisSelecionado = cadastroForm.watch('pais')
+  const estadosPais = ESTADOS[paisSelecionado] ?? []
 
   async function loginWithGoogle() {
     const supabase = createClient()
@@ -77,12 +94,13 @@ export default function AuthPage() {
   async function onCadastro(data: CadastroData) {
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: {
           nome: data.nome,
+          pais: data.pais,
           cidade: data.cidade,
           estado: data.estado,
           tem_impressora: data.tem_impressora,
@@ -94,8 +112,13 @@ export default function AuthPage() {
       setLoading(false)
       return
     }
-    setDone(true)
-    setTimeout(() => router.push('/dashboard'), 2000)
+    // session null = Supabase enviou email de confirmação
+    if (!signUpData?.session) {
+      setDone('confirmar')
+    } else {
+      setDone('entrando')
+      setTimeout(() => router.push('/dashboard'), 1500)
+    }
   }
 
   if (done) {
@@ -103,8 +126,20 @@ export default function AuthPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/30 px-4">
         <div className="text-center max-w-md">
           <CheckCircle2 className="w-16 h-16 text-accent mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo à comunidade!</h2>
-          <p className="text-muted-foreground">Redirecionando para o dashboard...</p>
+          {done === 'confirmar' ? (
+            <>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Verifique seu email</h2>
+              <p className="text-muted-foreground">
+                Enviamos um link de confirmação para o seu email.<br />
+                Clique no link para ativar sua conta e acessar o dashboard.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Bem-vindo à comunidade!</h2>
+              <p className="text-muted-foreground">Redirecionando para o dashboard...</p>
+            </>
+          )}
         </div>
       </div>
     )
@@ -212,6 +247,21 @@ export default function AuthPage() {
                 <Input id="cad-password" type="password" placeholder="Mínimo 8 caracteres" {...cadastroForm.register('password')} />
                 {cadastroForm.formState.errors.password && <p className="text-xs text-destructive">{cadastroForm.formState.errors.password.message}</p>}
               </div>
+              <div className="space-y-1.5">
+                <Label>País</Label>
+                <Select onValueChange={v => {
+                  cadastroForm.setValue('pais', v)
+                  cadastroForm.setValue('estado', '')
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o país" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAISES.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {cadastroForm.formState.errors.pais && <p className="text-xs text-destructive">{cadastroForm.formState.errors.pais.message}</p>}
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="cidade">Cidade</Label>
@@ -220,21 +270,31 @@ export default function AuthPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Estado</Label>
-                  <Select onValueChange={v => cadastroForm.setValue('estado', v ?? '')}>
+                  <Select
+                    onValueChange={v => cadastroForm.setValue('estado', v ?? '')}
+                    disabled={!paisSelecionado}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="UF" />
+                      <SelectValue placeholder={paisSelecionado ? 'UF' : 'Selecione o país antes'} />
                     </SelectTrigger>
                     <SelectContent>
-                      <div className="px-2 py-1 text-xs text-muted-foreground font-medium">Estados Unidos</div>
-                      {ESTADOS_US.map(e => <SelectItem key={e} value={`US-${e}`}>{e}</SelectItem>)}
-                      <div className="px-2 py-1 text-xs text-muted-foreground font-medium mt-1">Brasil</div>
-                      {ESTADOS_BR.map(e => <SelectItem key={e} value={`BR-${e}`}>{e}</SelectItem>)}
+                      {estadosPais.length > 0
+                        ? estadosPais.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)
+                        : <SelectItem value="-" disabled>Sem estados cadastrados</SelectItem>
+                      }
                     </SelectContent>
                   </Select>
                   {cadastroForm.formState.errors.estado && <p className="text-xs text-destructive">{cadastroForm.formState.errors.estado.message}</p>}
                 </div>
               </div>
-              <div className="p-4 rounded-xl bg-muted/40 border border-border/40">
+              <div
+                className={`p-4 rounded-xl border cursor-pointer transition-colors ${
+                  temImpressora
+                    ? 'bg-primary/10 border-primary/40'
+                    : 'bg-muted/40 border-border hover:border-border/80'
+                }`}
+                onClick={() => cadastroForm.setValue('tem_impressora', !temImpressora)}
+              >
                 <div className="flex items-center gap-3">
                   <Checkbox
                     id="tem_impressora"
@@ -247,18 +307,26 @@ export default function AuthPage() {
                   </div>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
+              <div
+                className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                  lgpdAceito
+                    ? 'bg-primary/10 border-primary/40'
+                    : 'border-border hover:border-border/80'
+                }`}
+                onClick={() => cadastroForm.setValue('lgpd_aceito', (!lgpdAceito) as true)}
+              >
                 <Checkbox
                   id="lgpd"
                   checked={!!lgpdAceito}
                   onCheckedChange={v => cadastroForm.setValue('lgpd_aceito', v as true)}
+                  className="mt-0.5"
                 />
-                <Label htmlFor="lgpd" className="text-sm text-muted-foreground cursor-pointer leading-relaxed">
+                <Label htmlFor="lgpd" className="text-sm text-foreground cursor-pointer leading-relaxed">
                   Aceito a{' '}
-                  <Link href="/privacidade" className="text-primary hover:underline">Política de Privacidade</Link>
+                  <Link href="/privacidade" className="text-primary hover:underline" onClick={e => e.stopPropagation()}>Política de Privacidade</Link>
                   {' '}e os{' '}
-                  <Link href="/termos" className="text-primary hover:underline">Termos de Uso</Link>
-                  {' '}(LGPD/CCPA)
+                  <Link href="/termos" className="text-primary hover:underline" onClick={e => e.stopPropagation()}>Termos de Uso</Link>
+                  {' '}<span className="text-muted-foreground">(LGPD/CCPA)</span>
                 </Label>
               </div>
               {cadastroForm.formState.errors.lgpd_aceito && <p className="text-xs text-destructive -mt-2">{cadastroForm.formState.errors.lgpd_aceito.message}</p>}
