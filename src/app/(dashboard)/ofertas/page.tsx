@@ -74,12 +74,25 @@ export default async function OfertasPage() {
       {offers?.length === 0 && (
         <div className="bg-card border border-border/60 rounded-2xl p-10 text-center">
           <Tag className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-          <h3 className="font-medium text-foreground mb-1">Nenhuma oferta ativa</h3>
-          <p className="text-sm text-muted-foreground">
+          <h3 className="font-medium text-foreground mb-1">Nenhuma oferta ativa agora</h3>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-5">
             {userPais
-              ? `Novas ofertas para ${PAIS_LABEL[userPais] ?? userPais} aparecem aqui quando parcerias são fechadas.`
-              : 'Defina seu país no perfil para ver ofertas da sua região.'}
+              ? `Estamos fechando parcerias para ${PAIS_LABEL[userPais] ?? userPais}. Seja o primeiro a saber.`
+              : 'Defina seu país no perfil para ver ofertas disponíveis na sua região.'}
           </p>
+          {userPais ? (
+            <Link href="/vire-pro">
+              <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors cursor-pointer">
+                <ExternalLink className="w-3.5 h-3.5" /> Quero ser avisado
+              </button>
+            </Link>
+          ) : (
+            <Link href="/perfil">
+              <button className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors cursor-pointer">
+                Completar perfil
+              </button>
+            </Link>
+          )}
         </div>
       )}
 
@@ -119,10 +132,10 @@ function OfferCard({ offer, featured }: { offer: PartnerOffer; featured?: boolea
     : false
 
   return (
-    <div className={`bg-card border rounded-2xl overflow-hidden flex flex-col gap-0 transition-colors ${
+    <div className={`bg-card border rounded-2xl overflow-hidden flex flex-col gap-0 transition-all duration-200 ${
       featured
-        ? 'border-accent/30 hover:border-accent/50'
-        : 'border-border/60 hover:border-primary/30'
+        ? 'border-accent/30 hover:border-accent/50 hover:shadow-md hover:shadow-accent/5'
+        : 'border-border/60 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5'
     }`}>
       {offer.imagem_url && (
         <div className="aspect-video bg-muted/40 overflow-hidden">

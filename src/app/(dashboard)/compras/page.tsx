@@ -76,7 +76,7 @@ export default async function ComprasPage() {
         {[
           { label: 'Compras abertas', value: abertas.length, icon: ShoppingCart, color: 'text-primary' },
           { label: 'Membros ativos', value: '1.000+', icon: Users, color: 'text-accent' },
-          { label: 'Desconto médio', value: '-15%', icon: TrendingDown, color: 'text-green-500' },
+          { label: 'Desconto médio', value: '-10%', icon: TrendingDown, color: 'text-green-500' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-card border border-border/60 rounded-xl p-4 flex items-center gap-3">
             <div className={`${color}`}>
@@ -96,12 +96,21 @@ export default async function ComprasPage() {
         {abertas.length === 0 ? (
           <div className="bg-card border border-border/60 rounded-2xl p-10 text-center">
             <ShoppingCart className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="font-medium text-foreground mb-1">Nenhuma compra aberta</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="font-medium text-foreground mb-1">Nenhuma compra aberta agora</h3>
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-5">
               {userPais
-                ? `Novas compras para ${userPais} aparecem aqui quando a equipe abre rodadas.`
-                : 'Defina seu país no perfil para ver compras da sua região.'}
+                ? `Quando abrirmos uma nova rodada para ${PAIS_LABEL[userPais] ?? userPais}, ela aparece aqui.`
+                : 'Defina seu país no perfil para ver as compras disponíveis na sua região.'}
             </p>
+            {userPais ? (
+              <Link href="/vire-pro" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors">
+                Quero ser avisado
+              </Link>
+            ) : (
+              <Link href="/perfil" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors">
+                Completar perfil
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -132,7 +141,7 @@ function PurchaseCard({ gp, closed }: { gp: GroupPurchase; closed?: boolean }) {
     : 0
 
   return (
-    <div className={`bg-card border rounded-2xl p-5 flex flex-col gap-4 ${closed ? 'opacity-60 border-border/40' : 'border-border/60 hover:border-primary/30 transition-colors'}`}>
+    <div className={`bg-card border rounded-2xl p-5 flex flex-col gap-4 transition-all duration-200 ${closed ? 'opacity-60 border-border/40' : 'border-border/60 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5'}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-semibold text-foreground leading-tight">{gp.produto}</p>

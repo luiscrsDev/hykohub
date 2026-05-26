@@ -250,7 +250,7 @@ export default function AuthPage() {
               <div className="space-y-1.5">
                 <Label>País</Label>
                 <Select onValueChange={v => {
-                  cadastroForm.setValue('pais', v)
+                  cadastroForm.setValue('pais', v ?? '')
                   cadastroForm.setValue('estado', '')
                 }}>
                   <SelectTrigger>
