@@ -13,7 +13,16 @@ function Tabs({
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
+      orientation={orientation}
       data-orientation={orientation}
+      // O Base UI expõe apenas data-orientation="horizontal|vertical", mas as
+      // classes deste arquivo (data-horizontal:, group-data-horizontal/tabs:,
+      // group-data-vertical/tabs:) esperam os atributos booleanos. Sem eles,
+      // nenhuma variante de orientação era aplicada: o root ficava em flex-row
+      // e a lista de abas era renderizada ao lado do conteúdo, esticada.
+      {...(orientation === "vertical"
+        ? { "data-vertical": "" }
+        : { "data-horizontal": "" })}
       className={cn(
         "group/tabs flex gap-2 data-horizontal:flex-col",
         className

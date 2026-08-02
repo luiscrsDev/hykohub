@@ -95,54 +95,61 @@ export function MembersCrm() {
 
   function closeDrawer() { setSelected(null); setDrawerPrinters([]) }
 
+  /**
+   * Campos privilegiados (tier, is_pro, is_admin, admin_notes) não podem ser
+   * gravados direto do navegador — o RLS e o trigger do banco bloqueiam.
+   * Passam por /api/admin/members, que confere no servidor se quem pediu é admin.
+   */
+  async function patchMember(changes: Partial<Pick<Member, 'tier' | 'is_pro' | 'is_admin' | 'admin_notes'>>) {
+    if (!selected) return null
+    const res = await fetch('/api/admin/members', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: selected.id, changes }),
+    })
+    const payload = await res.json().catch(() => null)
+    if (!res.ok) {
+      toast.error(payload?.error ?? 'Não foi possível salvar')
+      return null
+    }
+    const updated = { ...selected, ...changes }
+    setSelected(updated)
+    setMembers(prev => prev.map(m => m.id === selected.id ? updated : m))
+    return updated
+  }
+
   async function saveTier() {
     if (!selected) return
     setSavingTier(true)
-    const { error } = await supabase.from('profiles').update({ tier: editTier } as never).eq('id', selected.id)
+    const updated = await patchMember({ tier: editTier as Member['tier'] })
     setSavingTier(false)
-    if (error) { toast.error('Erro ao salvar tier'); return }
-    toast.success('Tier atualizado')
-    const updated = { ...selected, tier: editTier as Member['tier'] }
-    setSelected(updated)
-    setMembers(prev => prev.map(m => m.id === selected.id ? updated : m))
+    if (updated) toast.success('Tier atualizado')
   }
 
   async function togglePro() {
     if (!selected) return
     setSavingPro(true)
     const newVal = !selected.is_pro
-    const { error } = await supabase.from('profiles').update({ is_pro: newVal } as never).eq('id', selected.id)
+    const updated = await patchMember({ is_pro: newVal })
     setSavingPro(false)
-    if (error) { toast.error('Erro'); return }
-    toast.success(newVal ? 'Membro promovido a Pro' : 'Status Pro removido')
-    const updated = { ...selected, is_pro: newVal }
-    setSelected(updated)
-    setMembers(prev => prev.map(m => m.id === selected.id ? updated : m))
+    if (updated) toast.success(newVal ? 'Membro promovido a Pro' : 'Status Pro removido')
   }
 
   async function toggleAdmin() {
     if (!selected) return
     setSavingAdmin(true)
     const newVal = !selected.is_admin
-    const { error } = await supabase.from('profiles').update({ is_admin: newVal } as never).eq('id', selected.id)
+    const updated = await patchMember({ is_admin: newVal })
     setSavingAdmin(false)
-    if (error) { toast.error('Erro'); return }
-    toast.success(newVal ? 'Admin concedido' : 'Admin removido')
-    const updated = { ...selected, is_admin: newVal }
-    setSelected(updated)
-    setMembers(prev => prev.map(m => m.id === selected.id ? updated : m))
+    if (updated) toast.success(newVal ? 'Admin concedido' : 'Admin removido')
   }
 
   async function saveNotes() {
     if (!selected) return
     setSavingNotes(true)
-    const { error } = await supabase.from('profiles').update({ admin_notes: notes || null } as never).eq('id', selected.id)
+    const updated = await patchMember({ admin_notes: notes || null })
     setSavingNotes(false)
-    if (error) { toast.error('Erro ao salvar notas'); return }
-    toast.success('Notas salvas')
-    const updated = { ...selected, admin_notes: notes || null }
-    setSelected(updated)
-    setMembers(prev => prev.map(m => m.id === selected.id ? updated : m))
+    if (updated) toast.success('Notas salvas')
   }
 
   const filtered = useMemo(() => {

@@ -271,7 +271,7 @@ export default function PerfilPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="cidade">Cidade</Label>
                   <Input id="cidade" placeholder="São Paulo" {...register('cidade')} />
@@ -356,7 +356,7 @@ export default function PerfilPage() {
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <Select value={selectedModel} onValueChange={v => { setSelectedModel(v ?? ''); setCustomModelName('') }}>
-                    <SelectTrigger className="flex-1">
+                    <SelectTrigger className="flex-1 min-w-0">
                       <SelectValue placeholder="Selecione o modelo">
                         {(value: string | null) => {
                           if (!value) return null
@@ -465,7 +465,7 @@ export default function PerfilPage() {
                 <h2 className="font-semibold text-foreground">Volume de operação</h2>
               </div>
               <p className="text-xs text-muted-foreground -mt-2">Permite entrar nas compras do grupo com volume certo</p>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="consumo">Consumo mensal (kg)</Label>
                   <Input id="consumo" type="number" step="0.1" min="0" placeholder="ex: 2.5" {...register('consumo_mensal_kg')} />
