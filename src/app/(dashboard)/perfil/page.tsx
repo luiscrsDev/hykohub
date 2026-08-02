@@ -16,9 +16,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Loader2, Plus, Trash2, Printer, Save } from 'lucide-react'
+import { Loader2, Plus, Trash2, Printer, Save, User, GraduationCap, Users2, Wrench, BarChart3 } from 'lucide-react'
 
 const EXPERIENCIA_OPTIONS = [
   { value: 'iniciante', label: 'Iniciante (< 1 ano)' },
@@ -29,10 +30,10 @@ const EXPERIENCIA_OPTIONS = [
 const FILAMENTOS = ['PLA', 'PETG', 'ABS', 'TPU', 'ASA', 'Nylon', 'Resina', 'Outros']
 
 const APRENDIZADO_OPTIONS = [
-  { value: 'cursos_online', label: '🎓 Cursos online' },
-  { value: 'mentoria_individual', label: '👤 Mentoria individual' },
-  { value: 'mentoria_grupo', label: '👥 Mentoria em grupo' },
-  { value: 'workshops', label: '🛠️ Workshops práticos' },
+  { value: 'cursos_online', label: 'Cursos online', icon: GraduationCap },
+  { value: 'mentoria_individual', label: 'Mentoria individual', icon: User },
+  { value: 'mentoria_grupo', label: 'Mentoria em grupo', icon: Users2 },
+  { value: 'workshops', label: 'Workshops práticos', icon: Wrench },
 ]
 
 const PAISES = [
@@ -217,227 +218,268 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Meu Perfil</h1>
         <p className="text-muted-foreground text-sm mt-1">Complete seu perfil para desbloquear mais benefícios</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Básico */}
-        <section id="basico" className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
-          <h2 className="font-semibold text-foreground">Informações básicas</h2>
-          <div className="space-y-1.5">
-            <Label htmlFor="nome">Nome</Label>
-            <Input id="nome" {...register('nome')} />
-            {errors.nome && <p className="text-xs text-destructive">{errors.nome.message}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label>País</Label>
-            <Select value={watch('pais') ?? ''} onValueChange={v => setValue('pais', v ?? '')}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione seu país" />
-              </SelectTrigger>
-              <SelectContent>
-                {PAISES.map(p => (
-                  <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="cidade">Cidade</Label>
-              <Input id="cidade" placeholder="São Paulo" {...register('cidade')} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="estado">Estado / Província</Label>
-              <Input id="estado" placeholder="SP" {...register('estado')} />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="whatsapp">WhatsApp (opcional)</Label>
-            <Input id="whatsapp" placeholder="+55 11 99999-9999" {...register('whatsapp')} />
-          </div>
-        </section>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Tabs defaultValue="basico" className="space-y-6">
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="basico" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <User className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Básico</span>
+              <span className="sm:hidden">Eu</span>
+            </TabsTrigger>
+            <TabsTrigger value="impressoras" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <Printer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Impressoras</span>
+              <span className="sm:hidden">HW</span>
+            </TabsTrigger>
+            <TabsTrigger value="preferencias" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Preferências</span>
+              <span className="sm:hidden">Prefs</span>
+            </TabsTrigger>
+            <TabsTrigger value="operacao" className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Operação</span>
+              <span className="sm:hidden">Ops</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Impressoras */}
-        <section id="impressoras" className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Printer className="w-4 h-4 text-primary" />
-            <h2 className="font-semibold text-foreground">Minhas impressoras</h2>
-          </div>
-          <p className="text-xs text-muted-foreground -mt-2">
-            Cada impressora cadastrada ativa alertas de firmware e manutenção específicos para seu modelo.
-          </p>
-
-          {printers.length > 0 && (
-            <div className="space-y-2">
-              {printers.map(up => (
-                <div key={up.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border/40">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">
-                      {up.printer_models?.slug === 'outra' && up.custom_model_name
-                        ? up.custom_model_name
-                        : `${up.printer_models?.marca} ${up.printer_models?.modelo}`}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {up.printer_models?.slug === 'outra' ? 'Modelo personalizado' : up.printer_models?.bed_size}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removePrinter(up.id)}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+          {/* Tab: Básico */}
+          <TabsContent value="basico" className="space-y-4">
+            <div className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
+              <h2 className="font-semibold text-foreground">Informações básicas</h2>
+              <div className="space-y-1.5">
+                <Label htmlFor="nome">Nome</Label>
+                <Input id="nome" {...register('nome')} />
+                {errors.nome && <p className="text-xs text-destructive">{errors.nome.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label>País</Label>
+                <Select value={watch('pais') ?? ''} onValueChange={v => setValue('pais', v ?? '')}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione seu país" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAISES.map(p => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cidade">Cidade</Label>
+                  <Input id="cidade" placeholder="São Paulo" {...register('cidade')} />
                 </div>
-              ))}
+                <div className="space-y-1.5">
+                  <Label htmlFor="estado">Estado / Província</Label>
+                  <Input id="estado" placeholder="SP" {...register('estado')} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="whatsapp">WhatsApp (opcional)</Label>
+                <Input id="whatsapp" placeholder="+55 11 99999-9999" {...register('whatsapp')} />
+              </div>
             </div>
-          )}
-
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <Select value={selectedModel} onValueChange={v => { setSelectedModel(v ?? ''); setCustomModelName('') }}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Selecione o modelo">
-                    {(value: string | null) => {
-                      if (!value) return null
-                      const m = allModels.find(x => x.id === value)
-                      return m ? (m.slug === 'outra' ? 'Outra (não listada)' : `${m.marca} ${m.modelo}`) : null
-                    }}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {allModels.filter(m => m.slug !== 'outra').map(m => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.marca} {m.modelo}
-                    </SelectItem>
-                  ))}
-                  {allModels.filter(m => m.slug === 'outra').map(m => (
-                    <SelectItem key={m.id} value={m.id}>
-                      Outra (não listada)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addPrinter}
-                disabled={!selectedModel || addingPrinter || (isOutra && !customModelName.trim())}
-                className="gap-1.5 shrink-0"
-              >
-                {addingPrinter ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                Adicionar
-              </Button>
+            <div className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
+              <h2 className="font-semibold text-foreground">Bio & experiência</h2>
+              <div className="space-y-1.5">
+                <Label htmlFor="bio-textarea">Bio <span className="text-muted-foreground text-xs">({bio.length}/280)</span></Label>
+                <Textarea id="bio-textarea" rows={3} placeholder="Conte um pouco sobre você e seu setup..." {...register('bio')} />
+                {errors.bio && <p className="text-xs text-destructive">{errors.bio.message}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nível de experiência</Label>
+                <Select value={watch('nivel_experiencia') ?? ''} onValueChange={v => setValue('nivel_experiencia', v ?? '')}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EXPERIENCIA_OPTIONS.map(o => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            {isOutra && (
-              <Input
-                placeholder="Nome da impressora (ex: Anycubic Kobra 2 Neo)"
-                value={customModelName}
-                onChange={e => setCustomModelName(e.target.value)}
-              />
-            )}
-          </div>
-        </section>
+          </TabsContent>
 
-        {/* Bio / experiência */}
-        <section id="bio" className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
-          <h2 className="font-semibold text-foreground">Bio & experiência</h2>
-          <div className="space-y-1.5">
-            <Label htmlFor="bio-textarea">Bio <span className="text-muted-foreground text-xs">({bio.length}/280)</span></Label>
-            <Textarea id="bio-textarea" rows={3} placeholder="Conte um pouco sobre você e seu setup..." {...register('bio')} />
-            {errors.bio && <p className="text-xs text-destructive">{errors.bio.message}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label>Nível de experiência</Label>
-            <Select value={watch('nivel_experiencia') ?? ''} onValueChange={v => setValue('nivel_experiencia', v ?? '')}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                {EXPERIENCIA_OPTIONS.map(o => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+          {/* Tab: Impressoras */}
+          <TabsContent value="impressoras">
+            <div className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <Printer className="w-4 h-4 text-primary" />
+                <h2 className="font-semibold text-foreground">Minhas impressoras</h2>
+              </div>
+              <p className="text-xs text-muted-foreground -mt-2">
+                Cada impressora cadastrada ativa alertas de firmware e manutenção específicos para seu modelo.
+              </p>
+
+              {printers.length > 0 && (
+                <div className="space-y-2">
+                  {printers.map(up => (
+                    <div key={up.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border/40">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {up.printer_models?.slug === 'outra' && up.custom_model_name
+                            ? up.custom_model_name
+                            : `${up.printer_models?.marca} ${up.printer_models?.modelo}`}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {up.printer_models?.slug === 'outra' ? 'Modelo personalizado' : up.printer_models?.bed_size}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removePrinter(up.id)}
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {printers.length === 0 && (
+                <div className="rounded-xl border border-dashed border-border/60 p-6 text-center">
+                  <Printer className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Nenhuma impressora cadastrada ainda</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Select value={selectedModel} onValueChange={v => { setSelectedModel(v ?? ''); setCustomModelName('') }}>
+                    <SelectTrigger className="flex-1 min-w-0">
+                      <SelectValue placeholder="Selecione o modelo">
+                        {(value: string | null) => {
+                          if (!value) return null
+                          const m = allModels.find(x => x.id === value)
+                          return m ? (m.slug === 'outra' ? 'Outra (não listada)' : `${m.marca} ${m.modelo}`) : null
+                        }}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allModels.filter(m => m.slug !== 'outra').map(m => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.marca} {m.modelo}
+                        </SelectItem>
+                      ))}
+                      {allModels.filter(m => m.slug === 'outra').map(m => (
+                        <SelectItem key={m.id} value={m.id}>
+                          Outra (não listada)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addPrinter}
+                    disabled={!selectedModel || addingPrinter || (isOutra && !customModelName.trim())}
+                    className="gap-1.5 shrink-0 cursor-pointer"
+                  >
+                    {addingPrinter ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Adicionar
+                  </Button>
+                </div>
+                {isOutra && (
+                  <Input
+                    placeholder="Nome da impressora (ex: Anycubic Kobra 2 Neo)"
+                    value={customModelName}
+                    onChange={e => setCustomModelName(e.target.value)}
+                  />
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Preferências */}
+          <TabsContent value="preferencias" className="space-y-4">
+            <div className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
+              <h2 className="font-semibold text-foreground">Filamentos que usa</h2>
+              <p className="text-xs text-muted-foreground -mt-2">Usado para calibrar compras em grupo</p>
+              <div className="flex flex-wrap gap-2">
+                {FILAMENTOS.map(f => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => toggleFilamento(f)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors cursor-pointer ${
+                      filamentos.includes(f)
+                        ? 'bg-primary/10 text-primary border-primary/30'
+                        : 'bg-muted/40 text-muted-foreground border-border/40 hover:border-primary/20'
+                    }`}
+                  >
+                    {f}
+                  </button>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </section>
-
-        {/* Filamentos */}
-        <section className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
-          <h2 className="font-semibold text-foreground">Filamentos que usa</h2>
-          <p className="text-xs text-muted-foreground -mt-2">Usado para calibrar compras em grupo</p>
-          <div className="flex flex-wrap gap-2">
-            {FILAMENTOS.map(f => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => toggleFilamento(f)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                  filamentos.includes(f)
-                    ? 'bg-primary/10 text-primary border-primary/30'
-                    : 'bg-muted/40 text-muted-foreground border-border/40 hover:border-primary/20'
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Aprendizado */}
-        <section className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
-          <div>
-            <h2 className="font-semibold text-foreground">Cursos e mentorias</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Quais formatos de aprendizado te interessam? (selecione todos que quiser)</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {APRENDIZADO_OPTIONS.map(opt => {
-              const selected = aprendizado.includes(opt.value)
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggleAprendizado(opt.value)}
-                  className={`relative flex flex-col gap-1.5 px-4 py-4 rounded-xl text-left border-2 transition-all duration-150 ${
-                    selected
-                      ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20'
-                      : 'bg-muted/40 border-border/40 text-muted-foreground hover:border-primary/40 hover:bg-muted/70'
-                  }`}
-                >
-                  <span className="text-xl leading-none">{opt.label.split(' ')[0]}</span>
-                  <span className={`text-sm font-medium leading-tight ${selected ? 'text-white' : 'text-foreground'}`}>
-                    {opt.label.split(' ').slice(1).join(' ')}
-                  </span>
-                  {selected && (
-                    <span className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-bold">✓</span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </section>
-
-        {/* Operação */}
-        <section id="operacao" className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
-          <h2 className="font-semibold text-foreground">Volume de operação</h2>
-          <p className="text-xs text-muted-foreground -mt-2">Permite entrar nas compras do grupo com volume certo</p>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="consumo">Consumo mensal (kg)</Label>
-              <Input id="consumo" type="number" step="0.1" min="0" placeholder="ex: 2.5" {...register('consumo_mensal_kg')} />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="horas">Horas/semana imprimindo</Label>
-              <Input id="horas" type="number" min="0" placeholder="ex: 20" {...register('horas_semana')} />
-            </div>
-          </div>
-        </section>
 
-        <Button type="submit" className="w-full h-11 gap-2" disabled={saving}>
+            <div className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
+              <div>
+                <h2 className="font-semibold text-foreground">Cursos e mentorias</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Quais formatos de aprendizado te interessam?</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {APRENDIZADO_OPTIONS.map(opt => {
+                  const selected = aprendizado.includes(opt.value)
+                  const Icon = opt.icon
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => toggleAprendizado(opt.value)}
+                      className={`relative flex flex-col gap-2 px-4 py-4 rounded-xl text-left border-2 transition-all duration-150 cursor-pointer ${
+                        selected
+                          ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20'
+                          : 'bg-muted/40 border-border/40 text-muted-foreground hover:border-primary/40 hover:bg-muted/70'
+                      }`}
+                    >
+                      <Icon className={`w-5 h-5 ${selected ? 'text-white' : 'text-primary'}`} />
+                      <span className={`text-sm font-medium leading-tight ${selected ? 'text-white' : 'text-foreground'}`}>
+                        {opt.label}
+                      </span>
+                      {selected && (
+                        <span className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-bold">✓</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Operação */}
+          <TabsContent value="operacao">
+            <div className="bg-card border border-border/60 rounded-2xl p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-primary" />
+                <h2 className="font-semibold text-foreground">Volume de operação</h2>
+              </div>
+              <p className="text-xs text-muted-foreground -mt-2">Permite entrar nas compras do grupo com volume certo</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="consumo">Consumo mensal (kg)</Label>
+                  <Input id="consumo" type="number" step="0.1" min="0" placeholder="ex: 2.5" {...register('consumo_mensal_kg')} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="horas">Horas/semana imprimindo</Label>
+                  <Input id="horas" type="number" min="0" placeholder="ex: 20" {...register('horas_semana')} />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <Button type="submit" className="w-full h-11 gap-2 mt-6 cursor-pointer" disabled={saving}>
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Salvar perfil
         </Button>

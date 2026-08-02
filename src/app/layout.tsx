@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Inter, Montserrat } from 'next/font/google'
-import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
 import './globals.css'
 
@@ -29,12 +28,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning className={`${inter.variable} ${montserrat.variable}`}>
+    <html lang="pt-BR" className={`dark ${inter.variable} ${montserrat.variable}`}>
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} forcedTheme="dark">
-          {children}
-          <Toaster richColors position="top-right" />
-        </ThemeProvider>
+        {children}
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   )

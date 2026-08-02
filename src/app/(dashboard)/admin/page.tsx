@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +13,7 @@ import {
   ExternalLink, Clock, CheckCircle2, XCircle, Users, ShoppingCart, Trash2, Tag, Star,
 } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { CATEGORIA_LABELS, NIVEL_LABELS, thumbnailFor, watchUrlFor, formatDuration } from '@/lib/video-labels'
 
 const PAISES = [
   { value: 'BR', label: '🇧🇷 Brasil' },
@@ -45,9 +47,13 @@ type StlPost = {
 }
 type VideoPost = {
   id: string; title: string; description: string | null
-  youtube_url: string; youtube_id: string; tags: string[]
+  youtube_url: string | null; youtube_id: string | null; tags: string[]
   status: string; created_at: string; submitted_by: string | null
   is_featured: boolean
+  platform: string; source_url: string | null; thumbnail_url: string | null
+  author_handle: string | null; duration_seconds: number | null
+  problem_category: string | null; problem_statement: string | null
+  solution_summary: string | null; level: string | null
 }
 type StatusFilter = 'pending' | 'approved' | 'rejected'
 
@@ -81,6 +87,7 @@ const STATUS_OPTIONS: { key: StatusFilter; label: string; icon: any; colors: str
 
 export default function AdminPage() {
   const supabase = createClient()
+  const router = useRouter()
   const [checking, setChecking] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [tab, setTab] = useState<AdminTab>('conteudo')
@@ -137,6 +144,9 @@ export default function AdminPage() {
   const [videoPosts, setVideoPosts] = useState<VideoPost[]>([])
   const [videoLoading, setVideoLoading] = useState(false)
   const [showAddVideo, setShowAddVideo] = useState(false)
+  // Transcrição exibida sob demanda, para conferir o conteúdo antes de aprovar
+  const [transcricoes, setTranscricoes] = useState<Record<string, string | null>>({})
+  const [transcricaoAberta, setTranscricaoAberta] = useState<string | null>(null)
   const [vTitle, setVTitle] = useState('')
   const [vUrl, setVUrl] = useState('')
   const [vDesc, setVDesc] = useState('')
@@ -151,7 +161,9 @@ export default function AdminPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setChecking(false); return }
       const { data } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
-      setIsAdmin(!!(data as any)?.is_admin)
+      const admin = !!(data as any)?.is_admin
+      if (!admin) { router.replace('/dashboard'); return }
+      setIsAdmin(true)
       setChecking(false)
     }
     checkAdmin()
@@ -327,6 +339,19 @@ export default function AdminPage() {
   }
 
   // Video actions
+  async function toggleTranscricao(videoId: string) {
+    if (transcricaoAberta === videoId) { setTranscricaoAberta(null); return }
+    setTranscricaoAberta(videoId)
+    if (transcricoes[videoId] !== undefined) return
+    const { data } = await supabase
+      .from('video_transcripts')
+      .select('full_text')
+      .eq('video_id', videoId)
+      .maybeSingle()
+    const texto = (data as { full_text: string } | null)?.full_text ?? null
+    setTranscricoes(prev => ({ ...prev, [videoId]: texto }))
+  }
+
   async function updateVideoStatus(id: string, status: 'approved' | 'rejected') {
     const { error } = await supabase.from('video_posts').update({ status } as never).eq('id', id)
     if (error) { toast.error('Erro'); return }
@@ -857,34 +882,106 @@ export default function AdminPage() {
             <EmptyState filter={videoFilter} type="vídeo" />
           ) : (
             <div className="space-y-2">
-              {videoPosts.map(post => (
-                <div key={post.id} className="bg-card border border-border/60 rounded-xl p-3 flex gap-3">
-                  <div className="relative shrink-0 w-20 aspect-video rounded-lg overflow-hidden bg-muted">
-                    <img src={`https://img.youtube.com/vi/${post.youtube_id}/mqdefault.jpg`} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                      <Play className="w-4 h-4 text-white fill-white" />
+              {videoPosts.map(post => {
+                const capa = thumbnailFor(post)
+                const assistir = watchUrlFor(post)
+                const duracao = formatDuration(post.duration_seconds)
+                return (
+                <div key={post.id} className="bg-card border border-border/60 rounded-xl p-3 space-y-3">
+                  <div className="flex gap-3">
+                    {/* Capa clicável: abre o vídeo original para conferir antes de aprovar */}
+                    <a
+                      href={assistir ?? '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative shrink-0 w-20 aspect-video rounded-lg overflow-hidden bg-muted group"
+                      title="Abrir o vídeo original"
+                    >
+                      {capa ? (
+                        <img src={capa} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors group-hover:bg-black/50">
+                        <Play className="w-4 h-4 text-white fill-white" />
+                      </div>
+                      {duracao && (
+                        <span className="absolute bottom-0.5 right-0.5 text-[10px] leading-none px-1 py-0.5 rounded bg-black/70 text-white">
+                          {duracao}
+                        </span>
+                      )}
+                    </a>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <p className="text-sm font-medium text-foreground line-clamp-1">{post.title}</p>
+                        {post.is_featured && <Badge className="text-xs px-1 py-0 bg-accent/10 text-accent border-accent/20 shrink-0">★</Badge>}
+                      </div>
+
+                      {post.problem_statement && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{post.problem_statement}</p>
+                      )}
+
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        {post.platform !== 'youtube' && (
+                          <Badge variant="secondary" className="text-xs px-1 py-0 capitalize">{post.platform}</Badge>
+                        )}
+                        {post.problem_category && CATEGORIA_LABELS[post.problem_category] && (
+                          <Badge variant="secondary" className="text-xs px-1 py-0">{CATEGORIA_LABELS[post.problem_category]}</Badge>
+                        )}
+                        {post.level && NIVEL_LABELS[post.level] && (
+                          <Badge variant="secondary" className="text-xs px-1 py-0">{NIVEL_LABELS[post.level]}</Badge>
+                        )}
+                        {post.author_handle && (
+                          <span className="text-xs text-muted-foreground">{post.author_handle}</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-3 mt-1.5">
+                        {assistir && (
+                          <a href={assistir} target="_blank" rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center gap-1">
+                            <ExternalLink className="w-3 h-3" /> Assistir
+                          </a>
+                        )}
+                        <button type="button" onClick={() => toggleTranscricao(post.id)}
+                          className="text-xs text-muted-foreground hover:text-foreground cursor-pointer">
+                          {transcricaoAberta === post.id ? 'Ocultar transcrição' : 'Ver transcrição'}
+                        </button>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(post.created_at).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
                     </div>
+
+                    <ActionButtons
+                      filter={videoFilter}
+                      isFeatured={post.is_featured}
+                      onApprove={() => updateVideoStatus(post.id, 'approved')}
+                      onReject={() => updateVideoStatus(post.id, 'rejected')}
+                      onToggleFeatured={() => toggleVideoFeatured(post.id, !post.is_featured)}
+                      onDelete={() => deleteVideo(post.id)}
+                    />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                      <p className="text-sm font-medium text-foreground line-clamp-1">{post.title}</p>
-                      {post.is_featured && <Badge className="text-xs px-1 py-0 bg-accent/10 text-accent border-accent/20 shrink-0">★</Badge>}
+
+                  {transcricaoAberta === post.id && (
+                    <div className="rounded-lg bg-muted/40 border border-border/40 p-3">
+                      {transcricoes[post.id] === undefined ? (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Carregando transcrição...
+                        </div>
+                      ) : transcricoes[post.id] ? (
+                        <p className="text-xs text-muted-foreground whitespace-pre-wrap max-h-48 overflow-y-auto">
+                          {transcricoes[post.id]}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Este vídeo ainda não tem transcrição.</p>
+                      )}
                     </div>
-                    {post.tags.length > 0 && (
-                      <p className="text-xs text-muted-foreground truncate">{post.tags.join(' · ')}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-0.5">{new Date(post.created_at).toLocaleDateString('pt-BR')}</p>
-                  </div>
-                  <ActionButtons
-                    filter={videoFilter}
-                    isFeatured={post.is_featured}
-                    onApprove={() => updateVideoStatus(post.id, 'approved')}
-                    onReject={() => updateVideoStatus(post.id, 'rejected')}
-                    onToggleFeatured={() => toggleVideoFeatured(post.id, !post.is_featured)}
-                    onDelete={() => deleteVideo(post.id)}
-                  />
+                  )}
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
