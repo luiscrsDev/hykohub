@@ -23,7 +23,11 @@ type UserPrinter = Database['public']['Tables']['user_printers']['Row'] & {
   printer_models: Database['public']['Tables']['printer_models']['Row'] | null
 }
 type StlPost = { id: string; title: string; thumbnail_url: string | null; external_link: string | null; file_url: string | null; tags: string[] }
-type VideoPost = { id: string; title: string; youtube_id: string; tags: string[] }
+type VideoPost = {
+  id: string; title: string; tags: string[]
+  youtube_id: string | null; thumbnail_url: string | null
+  problem_statement: string | null
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -49,7 +53,8 @@ export default async function DashboardPage() {
     .eq('status', 'approved').order('is_featured', { ascending: false }).order('created_at', { ascending: false }).limit(4)
   const stlPosts = rawStl as StlPost[] | null
 
-  const { data: rawVideos } = await supabase.from('video_posts').select('id,title,youtube_id,tags')
+  const { data: rawVideos } = await supabase.from('video_posts')
+    .select('id,title,youtube_id,thumbnail_url,problem_statement,tags')
     .eq('status', 'approved').order('is_featured', { ascending: false }).order('created_at', { ascending: false }).limit(3)
   const videoPosts = rawVideos as VideoPost[] | null
 
@@ -231,11 +236,19 @@ export default async function DashboardPage() {
                 </div>
                 <div className="flex flex-col gap-2.5">
                   {videoPosts.map(v => (
-                    <Link key={v.id} href="/videos">
+                    <Link key={v.id} href={`/videos?v=${v.id}`}>
                       <div className="bg-card border border-border/60 rounded-xl overflow-hidden hover:border-primary/30 transition-colors group flex gap-3 p-2">
                         <div className="relative w-28 shrink-0 rounded-lg overflow-hidden aspect-video bg-muted">
-                          <img src={`https://img.youtube.com/vi/${v.youtube_id}/mqdefault.jpg`} alt={v.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          {/* Capa própria (Instagram e afins) ou capa do YouTube */}
+                          {(v.thumbnail_url ?? (v.youtube_id ? `https://img.youtube.com/vi/${v.youtube_id}/mqdefault.jpg` : null)) ? (
+                            <img
+                              src={v.thumbnail_url ?? `https://img.youtube.com/vi/${v.youtube_id}/mqdefault.jpg`}
+                              alt={v.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />
+                          )}
                           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                             <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
                               <Play className="w-3 h-3 text-white fill-white" />
@@ -244,9 +257,11 @@ export default async function DashboardPage() {
                         </div>
                         <div className="flex-1 min-w-0 py-0.5">
                           <p className="text-xs font-medium text-foreground line-clamp-3 leading-snug">{v.title}</p>
-                          {v.tags.length > 0 && (
+                          {v.problem_statement ? (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{v.problem_statement}</p>
+                          ) : v.tags.length > 0 ? (
                             <p className="text-xs text-muted-foreground mt-1 truncate">{v.tags.slice(0, 2).join(' · ')}</p>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     </Link>

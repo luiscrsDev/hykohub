@@ -475,40 +475,73 @@ export type Database = {
       }
       video_posts: {
         Row: {
+          author_handle: string | null
           created_at: string | null
           description: string | null
+          duration_seconds: number | null
+          external_id: string | null
           id: string
           is_featured: boolean | null
+          level: string | null
+          platform: string
+          posted_at: string | null
+          problem_category: string | null
+          problem_statement: string | null
+          solution_summary: string | null
+          source_url: string | null
           status: string
           submitted_by: string | null
           tags: string[] | null
+          thumbnail_url: string | null
           title: string
-          youtube_id: string
-          youtube_url: string
+          youtube_id: string | null
+          youtube_url: string | null
         }
         Insert: {
+          author_handle?: string | null
           created_at?: string | null
           description?: string | null
+          duration_seconds?: number | null
+          external_id?: string | null
           id?: string
           is_featured?: boolean | null
+          level?: string | null
+          platform?: string
+          posted_at?: string | null
+          problem_category?: string | null
+          problem_statement?: string | null
+          solution_summary?: string | null
+          source_url?: string | null
           status?: string
           submitted_by?: string | null
           tags?: string[] | null
+          thumbnail_url?: string | null
           title: string
-          youtube_id: string
-          youtube_url: string
+          youtube_id?: string | null
+          youtube_url?: string | null
         }
         Update: {
+          author_handle?: string | null
           created_at?: string | null
           description?: string | null
+          duration_seconds?: number | null
+          external_id?: string | null
           id?: string
           is_featured?: boolean | null
+          level?: string | null
+          platform?: string
+          posted_at?: string | null
+          problem_category?: string | null
+          problem_statement?: string | null
+          solution_summary?: string | null
+          source_url?: string | null
           status?: string
           submitted_by?: string | null
           tags?: string[] | null
+          thumbnail_url?: string | null
           title?: string
-          youtube_id?: string
-          youtube_url?: string
+          youtube_id?: string | null
+          youtube_url?: string | null
         }
         Relationships: [
           {
