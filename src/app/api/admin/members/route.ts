@@ -10,7 +10,7 @@ import type { Database } from '@/types/database'
  * Altera campos privilegiados do perfil de um membro (tier, is_pro, is_admin,
  * admin_notes). Esses campos não podem ser alterados pelo navegador: a policy
  * "profiles_update_own" só permite editar o próprio perfil, e o trigger
- * trg_prevent_privileged_profile_changes (migration 003) bloqueia colunas de
+ * trg_prevent_privileged_profile_changes (migration 004) bloqueia colunas de
  * privilégio para qualquer role que não seja o service_role.
  *
  * Fluxo:

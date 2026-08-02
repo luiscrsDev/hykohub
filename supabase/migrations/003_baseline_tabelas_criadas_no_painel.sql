@@ -1,4 +1,4 @@
--- 0025_baseline_tabelas_criadas_no_painel.sql
+-- 003_baseline_tabelas_criadas_no_painel.sql
 --
 -- POR QUE ESTE ARQUIVO EXISTE
 -- Várias tabelas foram criadas direto no painel do Supabase e nunca entraram em
@@ -9,8 +9,8 @@
 -- partir do catálogo do próprio banco (colunas, constraints, índices e policies)
 -- e marcado como já aplicado no histórico de migrations.
 --
--- Numerado como 0025 de propósito: precisa rodar depois de 001 (que cria
--- profiles, referenciada por chaves estrangeiras daqui) e antes de 004 (que
+-- Numerado como 003 de propósito: precisa rodar depois de 001 (que cria
+-- profiles, referenciada por chaves estrangeiras daqui) e antes de 005 (que
 -- altera video_posts).
 --
 -- Tudo aqui é idempotente: rodar de novo não quebra nem duplica nada.
@@ -104,8 +104,8 @@ create policy stl_service_all on stl_posts
 
 -- =============================================================== video_posts
 -- Vídeos curados. As colunas de plataforma e de curadoria são acrescentadas
--- pela migration 004 — aqui elas já aparecem porque este arquivo retrata o
--- estado atual do banco. A 004 é idempotente e continua válida.
+-- pela migration 005 — aqui elas já aparecem porque este arquivo retrata o
+-- estado atual do banco. A 005 é idempotente e continua válida.
 
 create table if not exists video_posts (
   id                uuid primary key default gen_random_uuid(),

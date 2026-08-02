@@ -1,4 +1,4 @@
--- 003_protect_privileged_profile_columns.sql
+-- 004_protect_privileged_profile_columns.sql
 --
 -- PROBLEMA QUE ESTA MIGRATION RESOLVE
 -- A policy "profiles_update_own" permite que cada pessoa edite o próprio perfil,

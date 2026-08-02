@@ -1,4 +1,4 @@
--- 004_video_posts_multi_platform.sql
+-- 005_video_posts_multi_platform.sql
 --
 -- OBJETIVO
 -- Permitir que a seção de vídeos receba conteúdo de outras plataformas além do
