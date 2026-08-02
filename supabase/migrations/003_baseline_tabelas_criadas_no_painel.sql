@@ -364,4 +364,8 @@ $$;
 -- 4. whatsapp_messages guarda dado pessoal de terceiros (telefones, nomes e
 --    conteúdo de mensagens) e não é usada pelo site. Enquanto existir, é dado
 --    pessoal sob guarda do projeto: precisa de finalidade declarada, prazo de
---    retenção e base legal. Se for resquício de experimento, o certo é apagar.
+--    retenção e base legal.
+--    DECISÃO (02/08/2026): o dono optou por mantê-la como está. A tabela segue
+--    com RLS ligada e sem nenhuma policy — ou seja, inacessível pelo site,
+--    alcançável apenas pelo service_role e pelo painel. Não reabrir esta
+--    discussão sem pedido explícito.
